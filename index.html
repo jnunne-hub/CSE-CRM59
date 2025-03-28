@@ -82,7 +82,10 @@
                 <label for="name" class="required">Nom & Prénom</label>
                 <input type="text" id="name" name="name" required>
             </div>
-            
+            <div class="form-group">
+                <label for="name" class="required">Opération</label>
+                <input type="text" id="operation" name="operation" required>
+            </div>
             <div class="form-group">
                 <label for="machine" class="required">Machine concernée</label>
                 <select id="machine" name="machine" required>
@@ -114,14 +117,15 @@
 
     <script>
         // Configuration
-        const CONFIG_SHEET_URL = 'URL_DE_VOTRE_GOOGLE_SHEETS_CONFIGURATION'; // À remplacer
-        const GOOGLE_FORM_URL = 'URL_DE_VOTRE_GOOGLE_FORM'; // À remplacer
+        const CONFIG_SHEET_URL = 'https://docs.google.com/spreadsheets/d/180LL1GPjATsMSjDBgUlnpS8g4q3RROTpg0scu7KW8J4'; // À remplacer
+        const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/1eEHdsm2y983ldRmKYBHxUOoVdPyJnxEZEKIqnF2Cu7Y'; // À remplacer
         const FORM_ENTRY_IDS = {
-            email: 'entry.XXXXXX', // À remplacer avec les IDs de votre Google Form
-            name: 'entry.XXXXXX',
-            machine: 'entry.XXXXXX',
-            problem: 'entry.XXXXXX',
-            comment: 'entry.XXXXXX'
+            email: 'entry.399583258', // À remplacer avec les IDs de votre Google Form
+            name: 'entry.1187030162',
+            operation : 'entry.1562824809',
+            machine: 'entry.93618033',
+            problem: 'entry.1139719107',
+            comment: 'entry.2065275832'
         };
 
         // Charger les machines et problèmes depuis Google Sheets
