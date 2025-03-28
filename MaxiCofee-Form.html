@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signaler un problème</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { display: flex; flex-direction: column; max-width: 400px; }
+        label, select, textarea { margin-bottom: 10px; }
+        button { background-color: #007BFF; color: white; padding: 10px; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Signaler un problème</h2>
+    <form id="reportForm">
+        <label for="machine">Machine concernée :</label>
+        <select id="machine" name="machine">
+            <option value="Machine 1">Machine 1</option>
+            <option value="Machine 2">Machine 2</option>
+            <option value="Machine 3">Machine 3</option>
+        </select>
+
+        <label for="problem">Problème rencontré :</label>
+        <select id="problem" name="problem">
+            <option value="Boissons froides">Boissons froides</option>
+            <option value="Panne">Panne</option>
+            <option value="Manque de produit">Manque de produit</option>
+            <option value="Autre">Autre</option>
+        </select>
+
+        <label for="comment">Commentaire :</label>
+        <textarea id="comment" name="comment"></textarea>
+
+        <button type="submit">Envoyer</button>
+    </form>
+
+    <p id="status"></p>
+
+    <script>
+        document.getElementById("reportForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append("entry.1234567890", document.getElementById("machine").value);
+            formData.append("entry.0987654321", document.getElementById("problem").value);
+            formData.append("entry.1122334455", document.getElementById("comment").value);
+
+            fetch("https://docs.google.com/forms/d/e/TON_ID_FORMULAIRE/formResponse", {
+                method: "POST",
+                body: formData,
+                mode: "no-cors"
+            }).then(() => {
+                document.getElementById("status").innerText = "✅ Problème signalé avec succès !";
+                document.getElementById("reportForm").reset();
+            }).catch(() => {
+                document.getElementById("status").innerText = "❌ Erreur lors de l'envoi.";
+            });
+        });
+    </script>
+
+</body>
+</html>
