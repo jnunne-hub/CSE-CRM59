@@ -4,63 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signalement Problème Machine à Café</title>
-    <!-- Ton CSS reste inchangé -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .confirmation {
+            display: none;
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
 </head>
 <body>
     <div class="form-container">
         <h1>Signalement Problème Machine à Café</h1>
+        
         <form id="reportForm">
             <div class="form-group">
                 <label for="email" class="required">Email</label>
                 <input type="email" id="email" name="email" required>
             </div>
+            
             <div class="form-group">
                 <label for="name" class="required">Nom & Prénom</label>
                 <input type="text" id="name" name="name" required>
             </div>
+            
             <div class="form-group">
                 <label for="operation" class="required">Opération</label>
                 <input type="text" id="operation" name="operation" required>
             </div>
+            
             <div class="form-group">
                 <label for="machine" class="required">Machine concernée</label>
                 <select id="machine" name="machine" required>
                     <option value="">Sélectionnez une machine</option>
+                    <!-- Options chargées dynamiquement -->
                 </select>
             </div>
+            
             <div class="form-group">
                 <label for="problem" class="required">Type de problème</label>
                 <select id="problem" name="problem" required>
                     <option value="">Sélectionnez un problème</option>
+                    <!-- Options chargées dynamiquement -->
                 </select>
             </div>
+            
             <div class="form-group">
                 <label for="comment">Commentaire (optionnel)</label>
                 <textarea id="comment" name="comment"></textarea>
             </div>
+            
             <button type="submit">Envoyer le signalement</button>
         </form>
+        
         <div id="confirmation" class="confirmation">
             Merci pour votre signalement ! Il a bien été enregistré.
         </div>
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylhNxyKU1EETTTCFeQhOMiC-NbJilfYxquCoLjZL2mrW8NSCU5zd91Aidu_G0rcIkF/exec"; // Remplace par ton URL Apps Script
+        // URL de ton deployment Google Apps Script (à remplacer)
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/[TON_ID]/exec";
 
+        // Charger dynamiquement les machines et problèmes depuis Google Sheets via Apps Script
         async function loadConfig() {
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "GET"
+                });
                 const data = await response.json();
                 
                 populateDropdown("machine", data.machines);
                 populateDropdown("problem", data.problems);
             } catch (error) {
-                console.error("Erreur chargement config:", error);
-                alert("Erreur de chargement des données. Réessayez plus tard.");
+                console.error("Erreur lors du chargement de la configuration:", error);
+                alert("Impossible de charger les données. Veuillez réessayer plus tard.");
             }
         }
 
+        // Remplir les menus déroulants
         function populateDropdown(id, items) {
             const dropdown = document.getElementById(id);
             items.forEach(item => {
@@ -71,25 +148,26 @@
             });
         }
 
+        // Envoyer les données au Google Form via Apps Script
         async function submitForm(formData) {
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
                     body: JSON.stringify(formData)
                 });
                 const result = await response.text();
                 
-                if (result === "Signalement envoyé avec succès") {
-                    return true;
-                }
-                return false;
+                return result === "Signalement envoyé avec succès";
             } catch (error) {
-                console.error("Erreur envoi formulaire:", error);
+                console.error("Erreur lors de l'envoi du formulaire:", error);
                 return false;
             }
         }
 
+        // Gérer la soumission du formulaire
         document.getElementById("reportForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             
@@ -107,16 +185,18 @@
             if (success) {
                 document.getElementById("reportForm").style.display = "none";
                 document.getElementById("confirmation").style.display = "block";
+                
                 setTimeout(() => {
                     document.getElementById("reportForm").reset();
                     document.getElementById("reportForm").style.display = "block";
                     document.getElementById("confirmation").style.display = "none";
                 }, 3000);
             } else {
-                alert("Erreur lors de l'envoi. Réessayez.");
+                alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
             }
         });
 
+        // Charger la configuration au démarrage
         loadConfig();
     </script>
 </body>
