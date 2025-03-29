@@ -92,7 +92,6 @@
                 <label for="machine" class="required">Machine concernée</label>
                 <select id="machine" name="machine" required>
                     <option value="">Sélectionnez une machine</option>
-                    <!-- Options chargées dynamiquement -->
                 </select>
             </div>
             
@@ -100,7 +99,6 @@
                 <label for="problem" class="required">Type de problème</label>
                 <select id="problem" name="problem" required>
                     <option value="">Sélectionnez un problème</option>
-                    <!-- Options chargées dynamiquement -->
                 </select>
             </div>
             
@@ -118,53 +116,50 @@
     </div>
 
     <script>
-        // URL de ton deployment Google Apps Script (à remplacer)
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4KWyCKz5FLVLkNzUTTXQ0foIg1rDYV-HDOsZa07JFysRzMwZjIMQj_qSnTwMALqw/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKFycb24KWycKz5FLVLkN2UTTX0Qf0lg1rDYV-HDOsZa07JFysRzMwZjiMQI_qsNTw/exec";
 
-        // Charger dynamiquement les machines et problèmes depuis Google Sheets via Apps Script 
         async function loadConfig() {
-    try {
-        console.log("Tentative de chargement des données depuis:", APPS_SCRIPT_URL);
-        const response = await fetch(APPS_SCRIPT_URL, {
-            method: "GET"
-        });
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+            try {
+                console.log("Tentative de chargement des données depuis:", APPS_SCRIPT_URL);
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "GET"
+                });
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                console.log("Données reçues:", data);
+
+                if (!data.machines || !data.problems) {
+                    throw new Error("Données incomplètes : 'machines' ou 'problems' manquant");
+                }
+
+                console.log("Remplissage du menu 'machine' avec:", data.machines);
+                populateDropdown("machine", data.machines);
+                console.log("Remplissage du menu 'problem' avec:", data.problems);
+                populateDropdown("problem", data.problems);
+            } catch (error) {
+                console.error("Erreur lors du chargement de la configuration:", error);
+                alert("Impossible de charger les données. Veuillez réessayer plus tard.");
+            }
         }
-        const data = await response.json();
-        console.log("Données reçues:", data);
 
-        // Vérifier que les données contiennent bien "machines" et "problems"
-        if (!data.machines || !data.problems) {
-            throw new Error("Données incomplètes : 'machines' ou 'problems' manquant");
+        function populateDropdown(id, items) {
+            const dropdown = document.getElementById(id);
+            if (!dropdown) {
+                console.error(`Élément avec l'ID '${id}' non trouvé`);
+                return;
+            }
+            console.log(`Ajout des options à l'élément '${id}':`, items);
+            items.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item;
+                option.textContent = item;
+                dropdown.appendChild(option);
+            });
+            console.log(`Options ajoutées à '${id}'. Nombre total d'options:`, dropdown.options.length);
         }
 
-        console.log("Remplissage du menu 'machine' avec:", data.machines);
-        populateDropdown("machine", data.machines);
-        console.log("Remplissage du menu 'problem' avec:", data.problems);
-        populateDropdown("problem", data.problems);
-    } catch (error) {
-        console.error("Erreur lors du chargement de la configuration:", error);
-        alert("Impossible de charger les données. Veuillez réessayer plus tard.");
-    }
-}
-
-function populateDropdown(id, items) {
-    const dropdown = document.getElementById(id);
-    if (!dropdown) {
-        console.error(`Élément avec l'ID '${id}' non trouvé`);
-        return;
-    }
-    console.log(`Ajout des options à l'élément '${id}':`, items);
-    items.forEach(item => {
-        const option = document.createElement("option");
-        option.value = item;
-        option.textContent = item;
-        dropdown.appendChild(option);
-    });
-    console.log(`Options ajoutées à '${id}'. Nombre total d'options:`, dropdown.options.length);
-}
-        // Envoyer les données au Google Form via Apps Script
         async function submitForm(formData) {
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
@@ -183,7 +178,6 @@ function populateDropdown(id, items) {
             }
         }
 
-        // Gérer la soumission du formulaire
         document.getElementById("reportForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             
@@ -212,8 +206,9 @@ function populateDropdown(id, items) {
             }
         });
 
-        // Charger la configuration au démarrage
-        loadConfig();
+        document.addEventListener("DOMContentLoaded", function() {
+            loadConfig();
+        });
     </script>
 </body>
 </html>
