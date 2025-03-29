@@ -123,31 +123,47 @@
 
         // Charger dynamiquement les machines et problèmes depuis Google Sheets via Apps Script
         async function loadConfig() {
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: "GET"
-                });
-                const data = await response.json();
-                
-                populateDropdown("machine", data.machines);
-                populateDropdown("problem", data.problems);
-            } catch (error) {
-                console.error("Erreur lors du chargement de la configuration:", error);
-                alert("Impossible de charger les données. Veuillez réessayer plus tard.");
-            }
+    try {
+        console.log("Tentative de chargement des données depuis:", APPS_SCRIPT_URL);
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: "GET"
+        });
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        console.log("Données reçues:", data);
+
+        // Vérifier que les données contiennent bien "machines" et "problems"
+        if (!data.machines || !data.problems) {
+            throw new Error("Données incomplètes : 'machines' ou 'problems' manquant");
         }
 
-        // Remplir les menus déroulants
-        function populateDropdown(id, items) {
-            const dropdown = document.getElementById(id);
-            items.forEach(item => {
-                const option = document.createElement("option");
-                option.value = item;
-                option.textContent = item;
-                dropdown.appendChild(option);
-            });
-        }
+        console.log("Remplissage du menu 'machine' avec:", data.machines);
+        populateDropdown("machine", data.machines);
+        console.log("Remplissage du menu 'problem' avec:", data.problems);
+        populateDropdown("problem", data.problems);
+    } catch (error) {
+        console.error("Erreur lors du chargement de la configuration:", error);
+        alert("Impossible de charger les données. Veuillez réessayer plus tard.");
+    }
+}
 
+function populateDropdown(id, items) {
+    const dropdown = document.getElementById(id);
+    if (!dropdown) {
+        console.error(`Élément avec l'ID '${id}' non trouvé`);
+        return;
+    }
+    console.log(`Ajout des options à l'élément '${id}':`, items);
+    items.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item;
+        option.textContent = item;
+        dropdown.appendChild(option);
+    });
+    console.log(`Options ajoutées à '${id}'. Nombre total d'options:`, dropdown.options.length);
+}
         // Envoyer les données au Google Form via Apps Script
         async function submitForm(formData) {
             try {
