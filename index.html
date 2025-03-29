@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signalement Problème Machine à Café 2</title>
+    <title>Signalement Problème Machine à Café</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,7 +70,7 @@
 </head>
 <body>
     <div class="form-container">
-        <h1>Signalement Problème Machine à Café 2</h1>
+        <h1>Signalement Problème Machine à Café</h1>
         
         <form id="reportForm">
             <div class="form-group">
@@ -92,6 +92,12 @@
                 <label for="machine" class="required">Machine concernée</label>
                 <select id="machine" name="machine" required>
                     <option value="">Sélectionnez une machine</option>
+                    <option value="bas a gauche">bas a gauche</option>
+                    <option value="bas a droite">bas a droite</option>
+                    <option value="R0">R0</option>
+                    <option value="R1">R1</option>
+                    <option value="R2">R2</option>
+                    <option value="R3">R3</option>
                 </select>
             </div>
             
@@ -99,6 +105,9 @@
                 <label for="problem" class="required">Type de problème</label>
                 <select id="problem" name="problem" required>
                     <option value="">Sélectionnez un problème</option>
+                    <option value="Pas de gobelet">Pas de gobelet</option>
+                    <option value="Gobelet vide">Gobelet vide</option>
+                    <option value="Pb de rechargement">Pb de rechargement</option>
                 </select>
             </div>
             
@@ -116,62 +125,42 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVSbX0Yzapo7fUnaHbU-ULPuH56JdshUShAcuEidCsacEUISpNyWuTeNPZP-TzMgUE/exec";
-
-        async function loadConfig() {
-            try {
-                console.log("Tentative de chargement des données depuis:", APPS_SCRIPT_URL);
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: "GET"
-                });
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                console.log("Données reçues:", data);
-
-                if (!data.machines || !data.problems) {
-                    throw new Error("Données incomplètes : 'machines' ou 'problems' manquant");
-                }
-
-                console.log("Remplissage du menu 'machine' avec:", data.machines);
-                populateDropdown("machine", data.machines);
-                console.log("Remplissage du menu 'problem' avec:", data.problems);
-                populateDropdown("problem", data.problems);
-            } catch (error) {
-                console.error("Erreur lors du chargement de la configuration:", error);
-                alert("Impossible de charger les données. Veuillez réessayer plus tard.");
-            }
-        }
-
-        function populateDropdown(id, items) {
-            const dropdown = document.getElementById(id);
-            if (!dropdown) {
-                console.error(`Élément avec l'ID '${id}' non trouvé`);
-                return;
-            }
-            console.log(`Ajout des options à l'élément '${id}':`, items);
-            items.forEach(item => {
-                const option = document.createElement("option");
-                option.value = item;
-                option.textContent = item;
-                dropdown.appendChild(option);
-            });
-            console.log(`Options ajoutées à '${id}'. Nombre total d'options:`, dropdown.options.length);
-        }
+        // URL de ton Google Form (remplace par la tienne)
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSf3dNVEoaTqUm7NxJZzMq6V5B3X0p9LV-aQizRbos4JuMQVuw/formResponse";
+        
+        // IDs des champs du Google Form (remplace par les tiens)
+        const FORM_ENTRY_IDS = {
+            email: "entry.399583258",
+            name: "entry.1187030162",
+            operation: "entry.1562824809",
+            machine: "entry.93618033",
+            problem: "entry.1139719107",
+            comment: "entry.2065275832"
+        };
 
         async function submitForm(formData) {
+            const formUrl = GOOGLE_FORM_URL;
+            const queryParams = new URLSearchParams();
+            
+            // Ajouter les réponses aux paramètres
+            for (const [key, value] of Object.entries(formData)) {
+                if (FORM_ENTRY_IDS[key]) {
+                    queryParams.append(FORM_ENTRY_IDS[key], value);
+                }
+            }
+            
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
+                const response = await fetch(formUrl, {
                     method: "POST",
+                    mode: "no-cors", // Utilise no-cors pour éviter les problèmes CORS
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/x-www-form-urlencoded"
                     },
-                    body: JSON.stringify(formData)
+                    body: queryParams.toString()
                 });
-                const result = await response.text();
                 
-                return result === "Signalement envoyé avec succès";
+                // Puisque mode: "no-cors" ne permet pas de lire la réponse, on suppose que ça a réussi
+                return true;
             } catch (error) {
                 console.error("Erreur lors de l'envoi du formulaire:", error);
                 return false;
@@ -204,10 +193,6 @@
             } else {
                 alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
             }
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            loadConfig();
         });
     </script>
 </body>
