@@ -8,9 +8,17 @@
 
     <!-- SDKs (chargés une seule fois) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <!-- Pour la vue Upload PDF -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- jsPDF et html2canvas pour l'export PDF des graphiques -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <header>
@@ -79,29 +87,48 @@
         </div>
     </template>
 
-    <template id="template-charts">
+<template id="template-charts">
     <div class="container">
-        <h1>Analyse des Semaines Hautes et Basses par Année</h1>
-        <div class="controls">
+        <div id="charts-exportable-content">
+            <h1>Analyse Détaillée des Heures de Travail</h1>
+            
+            <div id="charts-annual-summary-container">
+                <!-- Les graphiques annuels seront injectés ici -->
+                <!-- Structure modifiée pour les groupes annuels :
+                <section class="annual-chart-group">
+                    <h2 class="year-title">Analyse pour l'Année YYYY</h2>
+                    
+                    <div class="chart-section">
+                        <h3 class="chart-section-title">Totaux Semaines Hautes et Basses</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-YYYY-details"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-section">
+                        <h3 class="chart-section-title">Plus Longues Séries Consécutives</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-YYYY-consecutive"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-section">
+                        <h3 class="chart-section-title">Répartition Globale des Semaines</h3>
+                        <div class="chart-container" style="height: 40vh;">
+                            <canvas id="chart-YYYY-overall-pie"></canvas>
+                        </div>
+                    </div>
+                </section>
+                -->
+            </div>
+        </div>
+
+        <div class="controls chart-controls-fixed">
             <button id="refreshButtonChart">Rafraîchir les Graphiques</button>
+            <button id="exportChartsToPdfButton">Exporter en PDF</button>
         </div>
         <div class="loader" id="view-loader"></div>
         <div id="statusMessage"></div>
-        
-        <div id="charts-annual-summary-container">
-            <!-- Les graphiques annuels seront injectés ici -->
-            <!-- Exemple de structure pour un graphique annuel :
-            <div class="annual-chart-group">
-                <h2>Année YYYY</h2>
-                <div class="chart-container">
-                    <canvas id="chart-YYYY-details"></canvas>
-                </div>
-                 <div class="chart-container">
-                    <canvas id="chart-YYYY-overall"></canvas>
-                </div>
-            </div>
-            -->
-        </div>
     </div>
 </template>
 
