@@ -10,14 +10,47 @@ body {
     color: #333;
 }
 
+/* style.css */
+
+/* ... (vos styles existants pour header, nav, etc.) ... */
+
 header {
     background-color: #333;
     color: white;
-    padding: 1em 0;
+    padding: 1em 0; /* Ajustez le padding global si nécessaire */
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* Supprimer le padding spécifique si vous voulez que le contenu s'étende */
 }
 
+.app-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Ou left, si vous préférez */
+    padding: 0 20px; /* Ajoute un peu d'espace sur les côtés */
+    margin-bottom: 0.5em; /* Espace entre le titre/icône et la nav */
+}
+
+.header-icon {
+    width: 32px;  /* Taille de l'icône */
+    height: 32px; /* Taille de l'icône */
+    stroke: #ffffff; /* Couleur du trait de l'icône */
+    margin-right: 10px; /* Espace entre l'icône et le titre */
+}
+
+.app-title {
+    font-size: 1.8em; /* Taille du titre */
+    color: #ffffff;   /* Couleur du titre */
+    margin: 0;        /* Supprime les marges par défaut du h1 */
+    font-weight: 600; /* Épaisseur de la police */
+}
+
+/* Ajustement pour la nav si elle est en dessous du titre/icône */
+nav {
+    margin-top: 10px; /* Espace si la nav est en dessous */
+}
+
+/* Styles pour la navigation (vous les avez probablement déjà) */
 nav ul {
     list-style-type: none;
     padding: 0;
