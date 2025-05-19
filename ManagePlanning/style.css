@@ -112,5 +112,17 @@ tr:nth-child(even) { background-color: #f9f9f9; }
     width: 30px; height: 30px; animation: spin 1s linear infinite;
     margin: 20px auto; display: none; /* Sera géré par JS */
 }
+/* Dans style.css */
+.annual-chart-group {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+.annual-chart-group h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #444;
+}
+/* .chart-container est déjà défini */
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 #statusMessage, #firebaseStatus { font-size: 0.9em; text-align: center; margin-top: 10px; }
