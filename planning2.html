@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur d'Heures de Travail</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        input[type="file"] { display: block; margin: 20px auto; }
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button#calculateButton {
+            background-color: #5cb85c;
+        }
+        button#calculateButton:hover {
+            background-color: #4cae4c;
+        }
+        button#exportCsvButton {
+            background-color: #007bff;
+            margin-top: 15px;
+        }
+        button#exportCsvButton:hover {
+            background-color: #0056b3;
+        }
+        #results { margin-top: 20px; padding: 10px; background-color: #e9e9e9; border-radius: 4px; }
+        #results h2 { margin-top: 0; }
+        #results pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+        } else {
+            console.error("ALERTE: pdf.js n'est pas chargé.");
+            alert("ALERTE: pdf.js n'a pas pu être chargé. L'application ne fonctionnera pas.");
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculateur d'Heures de Travail Hebdomadaires</h1>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <button id="calculateButton" onclick="processPDF()">Calculer les Heures</button>
+        <div class="loader" id="loader"></div>
+        <div id="results">
+            <h2>Résultats :</h2>
+            <pre id="output"></pre>
+            <button id="exportCsvButton" onclick="exportToCSV()" style="display:none;">Exporter en CSV</button>
+        </div>
+    </div>
+
+    <script>
+        const WORK_ACTIVITIES = ['VAL_AG2R_MAIL', 'VAL_AG2R', 'For_Formation Syndicale'];
+        const MONTH_MAP_FR = {
+            'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3, 'mai': 4, 'juin': 5,
+            'juillet': 6, 'août': 7, 'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
+        };
+
+        let currentWeeklyHoursData = {};
+        let personName = "Inconnu"; 
+
+        function showLoader(show) {
+            document.getElementById('loader').style.display = show ? 'block' : 'none';
+        }
+
+        async function processPDF() {
+            console.log("Début de processPDF");
+            const fileInput = document.getElementById('pdfFile');
+            const outputElement = document.getElementById('output');
+            const exportButton = document.getElementById('exportCsvButton');
+            
+            outputElement.textContent = '';
+            exportButton.style.display = 'none';
+            currentWeeklyHoursData = {};
+            personName = "Inconnu"; 
+
+            if (!fileInput.files.length) {
+                outputElement.textContent = 'Veuillez sélectionner un fichier PDF.';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            showLoader(true);
+
+            reader.onload = async function(event) {
+                try {
+                    if (typeof pdfjsLib === 'undefined') {
+                         outputElement.textContent = "Erreur: La librairie PDF.js n'a pas pu être chargée.";
+                         showLoader(false);
+                         return;
+                    }
+                    const typedArray = new Uint8Array(event.target.result);
+                    const pdf = await pdfjsLib.getDocument({data: typedArray}).promise;
+                    let fullText = '';
+
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str.trim()).filter(s => s.length > 0).join('\n');
+                        fullText += pageText + '\n\n';
+                    }
+                    
+                    // --- MODIFICATION EXTRACTION NOM ---
+                    personName = "Inconnu"; // Assurer une réinitialisation
+                    const linesOfText = fullText.split('\n');
+                    const planningLineRegex = /Planning de travail pour\s+(.+)/i;
+                    let potentialNameLine = "";
+
+                    for (const line of linesOfText) {
+                        const match = line.match(planningLineRegex);
+                        if (match && match[1]) {
+                            potentialNameLine = match[1].trim();
+                            // Dans votre PDF, le nom et la date de début du planning sont sur la même ligne que "Planning de travail pour..."
+                            // donc on peut traiter `potentialNameLine` directement.
+                            break; 
+                        }
+                    }
+
+                    if (potentialNameLine) {
+                        // Le nom est ce qui se trouve AVANT la plage de dates du planning (ex: "jeudi 01. mai...")
+                        // ou avant "peopleware" si c'est ce qui suit.
+                        const globalDateRangeRegexOnLine = /(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s+\d{2}\.\s+\w+/i;
+                        const dateRangeMatch = potentialNameLine.match(globalDateRangeRegexOnLine);
+
+                        if (dateRangeMatch && dateRangeMatch.index > 0) { //  index > 0 pour s'assurer qu'il y a du texte avant la date
+                            personName = potentialNameLine.substring(0, dateRangeMatch.index).trim();
+                        } else {
+                            // Si pas de date, peut-être que "peopleware" est collé
+                            // ou que le nom est seul sur la ligne après "Planning de travail pour"
+                            const peoplewareIndex = potentialNameLine.toLowerCase().indexOf("peopleware");
+                            if (peoplewareIndex > 0) { 
+                                 personName = potentialNameLine.substring(0, peoplewareIndex).trim();
+                            } else if (!dateRangeMatch) { // S'il n'y a pas de date ET pas de peopleware, on prend tout
+                                personName = potentialNameLine; 
+                            }
+                            // Si dateRangeMatch existe mais index est 0, personName reste "Inconnu"
+                        }
+                        
+                        if (!personName || personName.length === 0) { // Vérifier si le nom est vide après trim
+                            personName = "Inconnu"; // Remettre à Inconnu si vide
+                            console.warn("Nom de la personne non trouvé ou vide après nettoyage. Utilisation de 'Inconnu'.");
+                        } else {
+                            console.log("Nom de la personne extrait:", personName);
+                        }
+
+                    } else {
+                        console.warn("Ligne 'Planning de travail pour' non trouvée. Utilisation de 'Inconnu' pour le nom.");
+                    }
+                    // --- FIN MODIFICATION EXTRACTION NOM ---
+
+
+                    const weeklyHours = parseScheduleAndCalculateHours(fullText);
+                    currentWeeklyHoursData = weeklyHours;
+                    displayResults(weeklyHours);
+
+                } catch (error) {
+                    console.error("Erreur lors du traitement du PDF:", error);
+                    outputElement.textContent = `Erreur: ${error.message}.`;
+                } finally {
+                    showLoader(false);
+                }
+            };
+
+            reader.onerror = function() {
+                outputElement.textContent = 'Erreur lors de la lecture du fichier.';
+                showLoader(false);
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseDateString(dateStrPart) {
+            const cleanedDateStr = dateStrPart.replace(/\.(?=\s*\d{4})/,'');
+            const parts = cleanedDateStr.trim().split(' ');
+            if (parts.length < 3) return null;
+            const day = parseInt(parts[0].replace('.', ''));
+            const monthName = parts[1].toLowerCase().replace('.', '');
+            const year = parseInt(parts[2]);
+            if (isNaN(day) || isNaN(year) || !(monthName in MONTH_MAP_FR)) return null;
+            return new Date(year, MONTH_MAP_FR[monthName], day);
+        }
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+
+        function calculateDuration(startTimeStr, endTimeStr) {
+            const [startH, startM] = startTimeStr.split(':').map(Number);
+            const [endH, endM] = endTimeStr.split(':').map(Number);
+            const startDate = new Date(0, 0, 0, startH, startM, 0);
+            const endDate = new Date(0, 0, 0, endH, endM, 0);
+            let diffMs = endDate - startDate;
+            if (diffMs < 0) { diffMs += 24 * 60 * 60 * 1000; }
+            return diffMs / (1000 * 60 * 60);
+        }
+
+        function parseScheduleAndCalculateHours(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const weeklyHours = {};
+            let currentDate = null;
+            let currentDayMarkedAsFullDayEvent = false;
+            let potentielJourSemaine = null;
+
+            const dayOfWeekRegex = /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/i;
+            const shortDateRegex = /^(\d{2}\.\s*\w+\.?\s+\d{4})$/i;
+            const timeSlotRegex = /(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\s+([A-Za-z0-9_]+)/;
+            const fullDayRegex = /^Journée entière\s+([A-Za-z0-9_]+)/i;
+
+            const ignorePatterns = [
+                /Planning de travail pour/i, // Modifié pour être plus général et ignorer toute la ligne
+                /jeudi\s+\d{2}\.\s+\w+\s+\d{4}\s+-\s+lundi\s+\d{2}\.\s+\w+\s+\d{4}/i, // La plage globale
+                /Date\s+Planning de travail/i,
+                /Page \d+ sur \d+ - Téléchargé le/i,
+                /© \d{4} peopleware/i,
+                /^peopleware$/i,
+                /^Date$/i,
+                /^Planning de travail$/i,
+            ];
+
+            for (let i = 0; i < lines.length; i++) {
+                let trimmedLine = lines[i];
+
+                // Si la ligne contient le nom de la personne, elle est gérée par l'extraction du nom plus haut
+                // et par l'ignorePattern /Planning de travail pour/i.
+                // Si le nom est seul sur une ligne (ex: "Julien NUNNE"), il ne correspondra à aucune regex
+                // et sera ignoré par la logique qui attend un jour/date/activité.
+                if (trimmedLine === personName && personName !== "Inconnu") { // Ignorer la ligne si c'est juste le nom
+                    continue;
+                }
+
+                if (ignorePatterns.some(pattern => pattern.test(trimmedLine))) {
+                    continue;
+                }
+
+                const dayMatch = trimmedLine.match(dayOfWeekRegex);
+                if (dayMatch) {
+                    potentielJourSemaine = dayMatch[1];
+                    currentDate = null; 
+                    currentDayMarkedAsFullDayEvent = false;
+                    continue;
+                }
+
+                if (potentielJourSemaine) {
+                    const shortDateMatch = trimmedLine.match(shortDateRegex);
+                    if (shortDateMatch) {
+                        const dateStrPart = shortDateMatch[1];
+                        const newDate = parseDateString(dateStrPart);
+                        if (newDate) {
+                            currentDate = newDate;
+                            currentDayMarkedAsFullDayEvent = false;
+                            potentielJourSemaine = null; 
+
+                            if (i + 1 < lines.length) {
+                                const nextLineFullDayMatch = lines[i+1].match(fullDayRegex);
+                                if (nextLineFullDayMatch) {
+                                    currentDayMarkedAsFullDayEvent = true;
+                                    i++; 
+                                    continue; 
+                                }
+                            }
+                            continue; 
+                        } else {
+                            potentielJourSemaine = null;
+                        }
+                    } else {
+                         const fullDayAfterDayOfWeekMatch = trimmedLine.match(fullDayRegex);
+                         if (fullDayAfterDayOfWeekMatch) {
+                             potentielJourSemaine = null; 
+                             currentDate = null; 
+                         }
+                    }
+                }
+                
+                if (currentDate && currentDayMarkedAsFullDayEvent) {
+                    continue;
+                }
+
+                if (currentDate) { 
+                    const fullDayMatch = trimmedLine.match(fullDayRegex);
+                    if (fullDayMatch) {
+                        currentDayMarkedAsFullDayEvent = true;
+                        continue;
+                    }
+
+                    const timeSlotMatch = trimmedLine.match(timeSlotRegex);
+                    if (timeSlotMatch) {
+                        const startTime = timeSlotMatch[1];
+                        const endTime = timeSlotMatch[2];
+                        const activity = timeSlotMatch[3];
+
+                        if (WORK_ACTIVITIES.includes(activity)) {
+                            const duration = calculateDuration(startTime, endTime);
+                            if (duration > 0) {
+                                const weekKey = getWeekNumber(currentDate);
+                                weeklyHours[weekKey] = (weeklyHours[weekKey] || 0) + duration;
+                            }
+                        }
+                    }
+                }
+            }
+            return weeklyHours;
+        }
+
+        function displayResults(weeklyHours) {
+            const outputElement = document.getElementById('output');
+            const exportButton = document.getElementById('exportCsvButton');
+            let resultText = `Heures de travail pour ${personName} par semaine :\n\n`;
+            const sortedWeeks = Object.keys(weeklyHours).sort();
+
+            if (sortedWeeks.length === 0) {
+                resultText += "Aucune heure de travail calculée.\n";
+                resultText += "Vérifications possibles :\n";
+                resultText += "- Le fichier PDF est-il bien celui attendu et lisible ?\n";
+                resultText += "- Le format du PDF correspond-il à ce que le script attend ?\n";
+                resultText += "- Les activités comptées comme travail sont : " + WORK_ACTIVITIES.join(', ') + "\n";
+                resultText += "- Ouvrez la console du navigateur (F12) pour d'éventuels messages d'erreur ou de débogage.\n";
+                exportButton.style.display = 'none';
+            } else {
+                for (const week of sortedWeeks) {
+                    resultText += `Semaine ${week}: ${weeklyHours[week].toFixed(2)} heures\n`;
+                }
+                exportButton.style.display = 'block';
+            }
+            outputElement.textContent = resultText;
+        }
+
+        function exportToCSV() {
+            if (Object.keys(currentWeeklyHoursData).length === 0) {
+                alert("Aucune donnée à exporter.");
+                return;
+            }
+
+            let csvContent = "Personne,Semaine,HeuresTravaillees\r\n"; 
+
+            const sortedWeeks = Object.keys(currentWeeklyHoursData).sort();
+            sortedWeeks.forEach(week => {
+                const hours = currentWeeklyHoursData[week].toFixed(2);
+                const safePersonName = `"${personName.replace(/"/g, '""')}"`;
+                csvContent += `${safePersonName},"${week}","${hours}"\r\n`; 
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            
+            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const safeFileNamePerson = personName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            link.setAttribute("download", `heures_travail_${safeFileNamePerson}_${timestamp}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+    </script>
+</body>
+</html>
