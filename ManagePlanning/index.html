@@ -80,18 +80,30 @@
     </template>
 
     <template id="template-charts">
-        <div class="container">
-            <h1>Graphique : Semaines > 35 Heures par Personne</h1>
-            <div class="controls">
-                <button id="refreshButtonChart">Rafraîchir le Graphique</button>
-            </div>
-            <div class="loader" id="view-loader"></div>
-            <div id="statusMessage"></div>
-            <div class="chart-container">
-                <canvas id="weeksOver35hChart"></canvas>
-            </div>
+    <div class="container">
+        <h1>Analyse des Semaines Hautes et Basses par Année</h1>
+        <div class="controls">
+            <button id="refreshButtonChart">Rafraîchir les Graphiques</button>
         </div>
-    </template>
+        <div class="loader" id="view-loader"></div>
+        <div id="statusMessage"></div>
+        
+        <div id="charts-annual-summary-container">
+            <!-- Les graphiques annuels seront injectés ici -->
+            <!-- Exemple de structure pour un graphique annuel :
+            <div class="annual-chart-group">
+                <h2>Année YYYY</h2>
+                <div class="chart-container">
+                    <canvas id="chart-YYYY-details"></canvas>
+                </div>
+                 <div class="chart-container">
+                    <canvas id="chart-YYYY-overall"></canvas>
+                </div>
+            </div>
+            -->
+        </div>
+    </div>
+</template>
 
     <template id="template-manage-persons">
         <div class="container">
