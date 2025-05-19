@@ -123,6 +123,53 @@ tr:nth-child(even) { background-color: #f9f9f9; }
     margin-bottom: 20px;
     color: #444;
 }
+/* style.css */
+
+/* ... (styles existants) ... */
+
+.annual-chart-group {
+    margin-bottom: 40px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fdfdfd;
+}
+
+.year-title { /* Titre de l'année */
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50; /* Bleu foncé */
+    font-size: 1.8em;
+    border-bottom: 2px solid #3498db; /* Soulignement bleu */
+    padding-bottom: 10px;
+}
+
+.chart-section {
+    margin-bottom: 30px;
+}
+
+.chart-section-title { /* Titre pour chaque type de graphique */
+    text-align: left;
+    font-size: 1.3em;
+    color: #34495e; /* Bleu-gris */
+    margin-bottom: 15px;
+    padding-left: 10px;
+    border-left: 4px solid #3498db; /* Marge gauche bleue */
+}
+
+/* Pour que les boutons de contrôle soient en bas et potentiellement fixes */
+.chart-controls-fixed {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+}
+#exportChartsToPdfButton {
+    background-color: #e74c3c; /* Rouge pour PDF */
+}
+#exportChartsToPdfButton:hover {
+    background-color: #c0392b;
+}
 /* .chart-container est déjà défini */
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 #statusMessage, #firebaseStatus { font-size: 0.9em; text-align: center; margin-top: 10px; }
