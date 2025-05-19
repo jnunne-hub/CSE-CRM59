@@ -2,41 +2,20 @@
 
 /* --- Réinitialisation de base et Variables CSS --- */
 :root {
-    /* Palette Nordique / Moderne */
-    --primary-color: #5E81AC;  /* Bleu Nordique Froid */
-    --primary-color-rgb: 94, 129, 172;
-    --secondary-color: #88C0D0;/* Bleu Nordique Clair */
-    --secondary-color-rgb: 136, 192, 208;
-    --accent-color: #EBCB8B;   /* Jaune Moutarde Nordique */
-    --accent-color-rgb: 235, 203, 139;
-    --success-color: #A3BE8C;  /* Vert Nordique */
-    --success-color-rgb: 163, 190, 140;
-    --danger-color: #BF616A;   /* Rouge Nordique */
-    --danger-color-rgb: 191, 97, 106;
-    --info-color: #81A1C1;     /* Bleu-Gris Nordique Clair (similaire à primary mais plus clair pour infos) */
-    --info-color-rgb: 129, 161, 193;
-    
-    --bg-main: #ECEFF4;        /* Fond très clair (Blanc Nordique Off) */
-    --bg-card: rgba(229, 233, 240, 0.7); /* Fond de carte translucide (E5E9F0 avec opacité) */
-    --bg-card-opaque: #D8DEE9; /* Fond de carte opaque (Blanc Nordique plus sombre) */
-
-    --text-primary: #2E3440;   /* Gris Foncé Nordique (Presque Noir) */
-    --text-secondary: #4C566A; /* Gris Moyen Nordique (Plus clair) */
-    --text-on-primary: #ECEFF4;/* Texte clair sur fond primaire/foncé */
-    --text-on-accent: #2E3440; /* Texte foncé sur accent jaune */
-
-    --border-color: rgba(76, 86, 106, 0.15); /* Bordure discrète */
-    --border-stronger-color: rgba(76, 86, 106, 0.3);
-    --border-radius-sm: .25rem; /* 4px */
-    --border-radius-md: .5rem;  /* 8px */
-    --border-radius-lg: .75rem; /* 12px */
-
-    --font-family-main: 'Inter', 'Open Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    --font-family-headings: 'Poppins', 'Inter', sans-serif;
-
-    --shadow-soft: 0 4px 10px rgba(46, 52, 64, 0.04), 0 2px 5px rgba(46, 52, 64, 0.06);
-    --shadow-medium: 0 8px 20px rgba(46, 52, 64, 0.06), 0 4px 10px rgba(46, 52, 64, 0.08);
-    --backdrop-blur: saturate(150%) blur(8px); /* Ajusté */
+    --primary-color: #4A90E2; /* Bleu doux */
+    --secondary-color: #50C878; /* Vert doux */
+    --danger-color: #E57373; /* Rouge doux */
+    --info-color: #78909C; /* Bleu-gris */
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #6c757d;
+    --text-color: #343a40;
+    --white-color: #ffffff;
+    --border-color: #dee2e6;
+    --font-family-sans-serif: 'Open Sans', 'Inter', 'Poppins', sans-serif; /* Open Sans en premier pour un style plus doux */
+    --box-shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+    --box-shadow-md: 0 .5rem 1rem rgba(0,0,0,.15);
+    --border-radius: .375rem; /* 6px */
 }
 
 *, *::before, *::after {
@@ -46,11 +25,11 @@
 }
 
 body {
-    font-family: var(--font-family-main);
-    font-size: 16px; /* Base size */
-    line-height: 1.65; /* Amélioration lisibilité */
-    color: var(--text-primary);
-    background-color: var(--bg-main);
+    font-family: var(--font-family-sans-serif);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--light-gray);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -60,12 +39,14 @@ body {
 
 /* --- Structure de l'Application (Header, Main, Footer) --- */
 header {
-    background-color: var(--bg-card); 
-    backdrop-filter: var(--backdrop-blur);
-    -webkit-backdrop-filter: var(--backdrop-blur);
+    background-color: var(--white-color);
+    color: var(--text-color);
+    padding: 1rem 0;
+    box-shadow: var(--box-shadow-sm);
     border-bottom: 1px solid var(--border-color);
-    position: sticky; top: 0; z-index: 1000;
-    padding: 0.75rem 0;
+    position: sticky; /* Pour que le header reste en haut au défilement */
+    top: 0;
+    z-index: 1000;
 }
 
 .app-header-content {
@@ -73,267 +54,568 @@ header {
     align-items: center;
     justify-content: center;
     padding: 0 20px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .header-icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     stroke: var(--primary-color);
-    margin-right: 10px;
+    margin-right: 12px;
 }
 
 .app-title {
-    font-family: var(--font-family-headings);
-    font-size: 1.5em; /* Un peu plus petit pour header collant */
+    font-family: 'Poppins', sans-serif; /* Police plus distinctive pour le titre */
+    font-size: 1.75em;
     color: var(--primary-color);
     font-weight: 600;
 }
+.app-title .brand-qvc { /* Si vous avez une sous-partie du titre */
+    font-weight: 400;
+    color: var(--info-color);
+}
+
 
 nav ul {
     list-style-type: none;
     display: flex;
     justify-content: center;
-    gap: 5px; /* Espace entre les éléments */
+}
+
+nav ul li {
+    margin: 0 10px;
 }
 
 nav ul li a {
-    color: var(--text-secondary);
+    color: var(--dark-gray);
     text-decoration: none;
-    font-weight: 500;
-    padding: 0.4rem 0.9rem; /* Padding ajusté */
-    border-radius: var(--border-radius-md);
-    transition: background-color 0.2s ease, color 0.2s ease;
+    font-weight: 500; /* Medium weight */
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
     display: flex;
     align-items: center;
-    font-size: 0.9rem; /* Légèrement plus petit pour nav */
 }
 nav ul li a .feather {
-    margin-right: 6px;
-    width: 16px; height: 16px; /* Icônes plus petites dans nav */
-    stroke-width: 2.5; /* Lignes d'icône légèrement plus épaisses */
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
 }
 
 nav ul li a:hover {
+    background-color: var(--medium-gray);
     color: var(--primary-color);
-    background-color: rgba(var(--primary-color-rgb), 0.08); /* Fond très léger au survol */
 }
 
 nav ul li a.active {
-    color: var(--primary-color);
-    background-color: rgba(var(--primary-color-rgb), 0.12);
-    font-weight: 600;
+    background-color: var(--primary-color);
+    color: var(--white-color);
 }
 nav ul li a.active .feather {
-    stroke: var(--primary-color); /* Icônes actives avec couleur primaire */
+    stroke: var(--white-color);
 }
 
 
 main {
     flex-grow: 1;
-    padding: 30px 15px; /* Ajusté */
+    padding: 25px; /* Plus d'espace */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 #app-content .container {
-    background-color: transparent;
-    box-shadow: none;
-    padding: 0;
-    max-width: 1280px; /* Plus large pour plus de contenu/grilles */
+    background-color: var(--white-color);
+    padding: 25px 30px; /* Plus de padding interne */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-md);
+    width: 100%;
+    max-width: 960px; /* Un peu plus large pour le contenu */
     margin: 0 auto;
 }
 
 footer {
-    background-color: transparent; /* Pied de page plus intégré */
-    color: var(--text-secondary);
+    background-color: var(--white-color);
+    color: var(--dark-gray);
     text-align: center;
     padding: 1.5em 0;
-    font-size: 0.85em;
     border-top: 1px solid var(--border-color);
-    margin-top: 30px;
+    font-size: 0.9em;
 }
 
-/* --- Titres de Page et Section --- */
-h1 { /* Titre de Page dans #app-content .container */
-    font-family: var(--font-family-headings);
-    font-size: 2em; 
-    font-weight: 700;
-    color: var(--text-primary);
-    text-align: center;
-    margin-bottom: 1.5em; /* Plus d'espace sous le titre de page */
+/* --- Titres --- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
+    margin-bottom: 0.75em; /* Espace sous les titres */
+    line-height: 1.3;
 }
-h2 { /* Titres de Section (comme le titre de l'année dans les graphiques) */
-    font-family: var(--font-family-headings);
-    font-size: 1.6em; 
-    color: var(--primary-color); 
-    font-weight: 600;
-    margin-bottom: 1em; 
-    text-align: center; 
-}
-h3 { /* Titres de sous-section (comme le titre d'une carte de graphique) */
-    font-family: var(--font-family-headings);
-    font-size: 1.2em; 
-    color: var(--text-primary); 
-    font-weight: 600;
-    margin-bottom: 0.75em;
-}
+h1 { font-size: 2em; text-align: center; color: var(--primary-color); margin-bottom: 1.2em;} /* Titre de page */
+h2 { font-size: 1.5em; color: var(--text-color); margin-bottom: 1em; text-align: left; } /* Titres de section dans le contenu */
+h3 { font-size: 1.25em; color: var(--text-color); text-align: left;}
 
 
-/* --- Formulaires et Boutons Améliorés --- */
-.form-group { margin-bottom: 1.25rem; }
-.form-label { display: block; margin-bottom: 0.35rem; font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); }
-.form-control, .filter-group select, .filter-group input[type="text"] {
-    display: block; width: 100%;
-    padding: 0.65rem 1rem;
-    font-size: 0.95rem; font-weight: 400; line-height: 1.5;
-    color: var(--text-primary); background-color: var(--white-color);
+/* --- Formulaires et Boutons --- */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: var(--white-color);
+    background-clip: padding-box;
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    appearance: none;
+    border-radius: var(--border-radius);
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
-.form-control:focus, .filter-group select:focus, .filter-group input[type="text"]:focus {
-    border-color: var(--primary-color); outline: 0;
-    box-shadow: 0 0 0 .2rem rgba(var(--primary-color-rgb),.2);
+.form-control:focus {
+    color: var(--text-color);
+    background-color: var(--white-color);
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(var(--primary-color-rgb, 74, 144, 226),.25); /* Utiliser var(--primary-color-rgb) si défini */
 }
+/* Ajouter une variable RGB pour le box-shadow de focus */
+:root { --primary-color-rgb: 74, 144, 226; }
+
+
 .form-select {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234C566A' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-    background-position: right 0.75rem center; background-size: 14px 10px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 12px;
+}
+input[type="file"] {
+    margin: 10px 0; /* Ajusté pour être utilisé dans .form-group */
+}
+input[type="file"].form-control { padding: 0.5rem 0.75rem; /* Un peu moins de padding pour input file */ }
+
+
+button, .btn { /* Style de base pour tous les boutons */
+    display: inline-flex; /* Pour aligner icônes et texte */
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family-sans-serif);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    margin: 5px;
+}
+button .feather, .btn .feather {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
 }
 
-/* Boutons */
-button, .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--font-family-main); font-weight: 500;
-    padding: 0.6rem 1.2rem; font-size: 0.9rem; letter-spacing: 0.02em;
-    border-radius: var(--border-radius-md); border: 1px solid transparent;
-    cursor: pointer; transition: all 0.2s ease-in-out;
-    text-align: center; text-decoration: none; white-space: nowrap;
-    margin: 5px; box-shadow: var(--shadow-soft);
+/* Styles spécifiques pour les boutons de vues */
+#calculateButton, #saveFirebaseButton, .controls button, #refreshPersonsListButton { /* Boutons primaires par défaut */
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border-color: var(--primary-color);
 }
-button .feather, .btn .feather { width: 16px; height: 16px; margin-right: 8px; }
-
-.btn-primary, #calculateButton, #refreshButtonDashboard, #refreshPersonsListButton, #refreshButtonChart {
-    background-color: var(--primary-color); color: var(--text-on-primary); border-color: var(--primary-color);
-}
-.btn-primary:hover, #calculateButton:hover, /* ... */ :hover {
-    background-color: #4c709a; border-color: #4c709a; box-shadow: var(--shadow-medium); transform: translateY(-1px);
+#calculateButton:hover, #saveFirebaseButton:hover, .controls button:hover, #refreshPersonsListButton:hover {
+    background-color: #3a7bc8; /* Bleu un peu plus foncé */
+    border-color: #3a7bc8;
 }
 
-.btn-secondary, #exportCsvButton {
-    background-color: var(--bg-card-opaque); color: var(--text-primary); border-color: var(--border-stronger-color);
+/* Bouton Secondaire (exemple: export) */
+#exportCsvButton, button.btn-outline {
+    background-color: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
 }
-.btn-secondary:hover, #exportCsvButton:hover {
-    background-color: var(--text-secondary); color: var(--white-color); border-color: var(--text-secondary);
-}
-
-.btn-accent, #saveFirebaseButton {
-    background-color: var(--accent-color); color: var(--text-on-accent); border-color: var(--accent-color);
-}
-.btn-accent:hover, #saveFirebaseButton:hover {
-    background-color: #dAA95B; border-color: #dAA95B;
+#exportCsvButton:hover, button.btn-outline:hover {
+    background-color: var(--primary-color);
+    color: var(--white-color);
 }
 
-.btn-danger, .delete-button {
-    background-color: var(--danger-color); color: var(--white-color); border-color: var(--danger-color);
+/* Bouton Danger (exemple: supprimer) */
+#saveFirebaseButton { /* Changement de rôle: avant jaune, maintenant peut-être "info" ou garder un jaune doux */
+    background-color: #FFCA28; /* Jaune ambré doux */
+    color: var(--text-color);
+    border-color: #FFCA28;
 }
-.btn-danger:hover, .delete-button:hover {
-    background-color: #a74954; border-color: #a74954;
+#saveFirebaseButton:hover {
+    background-color: #FFB300; /* Jaune plus foncé */
+    border-color: #FFB300;
 }
 
-#exportChartsToPdfButton {
-    background-color: var(--info-color); color: var(--white-color); border-color: var(--info-color);
+.delete-button { /* Pour la page de gestion des personnes */
+    background-color: var(--danger-color);
+    color: var(--white-color);
+    border-color: var(--danger-color);
 }
-#exportChartsToPdfButton:hover { background-color: #6b8492; border-color: #6b8492; }
-
-.button-container, .dashboard-controls, #template-charts .controls.chart-controls-fixed {
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-    gap: 12px; margin-bottom: 25px;
+.delete-button:hover {
+    background-color: #D32F2F; /* Rouge plus foncé */
+    border-color: #D32F2F;
 }
-.dashboard-controls { padding: 15px; background-color: transparent; border: none; border-bottom: 1px solid var(--border-color);}
 
-/* --- Éléments Spécifiques aux Vues --- */
-/* Results & Pre */
-#results { margin-top:20px; padding:15px; background-color:var(--bg-main); border:1px solid var(--border-color); border-radius:var(--border-radius-md); }
-#results h2 { font-size: 1.2em; color:var(--primary-color); margin-bottom:10px; text-align: left; font-weight: 600; }
-#results pre { background-color:var(--white-color); padding:15px; border-radius:var(--border-radius-sm); border:1px solid var(--border-color); font-size: 0.85em; max-height: 250px;}
-
-/* Tableaux */
-table { width:100%; border-collapse:separate; border-spacing: 0; margin-top:20px; font-size:0.9em; }
-table th, table td { padding:10px 12px; text-align:left; vertical-align:middle; border-bottom:1px solid var(--border-color); }
-table th { background-color:transparent; font-weight:600; color:var(--text-secondary); border-top:1px solid var(--border-color); }
-table tr:last-child td { border-bottom: 1px solid var(--border-color); } /* Pour la dernière ligne */
-table tr:hover td { background-color: rgba(var(--primary-color-rgb), 0.05); }
-#hoursTableDashboard th { cursor:pointer; position:relative; user-select:none; }
-#hoursTableDashboard th:hover { color: var(--primary-color); }
-.sort-arrow { margin-left:5px; vertical-align:middle; opacity:0.5; font-size: 0.8em; }
-#hoursTableDashboard th.sorted-asc .sort-arrow::before { content: " ▲"; opacity:1; color:var(--primary-color); }
-#hoursTableDashboard th.sorted-desc .sort-arrow::before { content: " ▼"; opacity:1; color:var(--primary-color); }
-
-/* Pagination */
-.pagination-controls { text-align:center; margin-top:25px; display:flex; justify-content:center; align-items:center; gap:10px; }
-.pagination-controls button { background-color:var(--bg-card-opaque); color:var(--primary-color); padding:8px 12px; border: 1px solid var(--border-color); box-shadow: none;}
-.pagination-controls button:hover:not(:disabled) { background-color:var(--primary-color); color:var(--white-color); }
-.pagination-controls button:disabled { background-color:transparent; color:var(--dark-gray); cursor:not-allowed; opacity: 0.6; border-color: transparent;}
-.pagination-controls #pageInfo { font-weight:500; font-size: 0.9em; color: var(--text-secondary); }
-
-/* --- VUE CHARTS AMÉLIORÉE --- */
-#charts-exportable-content { padding: 0; } /* Pas de padding sur le conteneur exportable direct */
-#charts-exportable-content > h1 { /* Le titre principal "Analyse Détaillée..." */
-    font-family: var(--font-family-headings); color: var(--text-primary); font-size: 1.8em; margin-bottom: 25px; text-align: center;
+#exportChartsToPdfButton { /* Existant */
+    background-color: var(--info-color); 
+    color: var(--white-color);
+    border-color: var(--info-color);
 }
+#exportChartsToPdfButton:hover {
+    background-color: #546E7A; /* Bleu-gris plus foncé */
+    border-color: #546E7A;
+}
+
+
+.button-container, .controls {
+    text-align: center;
+    margin-bottom: 25px; /* Plus d'espace */
+    display: flex; /* Pour un meilleur alignement si plusieurs boutons/contrôles */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+.controls label { margin-right: 8px; align-self: center; }
+.controls select { padding: 0.7rem 1rem; color: var(--text-color); border: 1px solid var(--border-color); border-radius: var(--border-radius);}
+
+/* --- Résultat Upload & Tableaux --- */
+#results {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: var(--light-gray); /* Fond plus clair pour distinction */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+#results h2 { font-size: 1.3em; margin-bottom: 0.75em; color: var(--primary-color); text-align: left; }
+#results pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Police mono plus agréable */
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: var(--white-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--medium-gray);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    font-size: 0.95em; /* Un peu plus petit pour les tableaux denses */
+}
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 12px 15px; /* Plus de padding */
+    text-align: left;
+    vertical-align: middle;
+}
+th {
+    background-color: var(--medium-gray); /* Fond plus clair pour l'en-tête */
+    font-weight: 600; /* Texte en-tête plus gras */
+    color: var(--text-color);
+}
+tr:nth-child(even) td { /* Ligne paire (sauf si en-tête) */
+    background-color: var(--light-gray);
+}
+tr:hover td {
+    background-color: #e2e6ea; /* Effet de survol doux */
+}
+
+
+/* --- Éléments Spécifiques aux Vues (Graphiques, Modals) --- */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 50vh; /* Ajusté */
+    width: 100%; /* Prendra la largeur du conteneur parent */
+    max-width: 750px; /* Max width pour les graphiques */
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--white-color); /* Fond blanc pour le graphique */
+}
+
+.annual-chart-group { /* Titre au-dessus du graphique */
+    margin-bottom: 35px;
+    padding-bottom: 20px;
+    /* border-bottom: 1px solid var(--medium-gray); */ /* Optionnel */
+}
+.year-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--primary-color);
+    font-size: 1.6em;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+.chart-section { margin-bottom: 30px; }
+.chart-section-title {
+    font-size: 1.2em;
+    color: var(--dark-gray); /* Un gris pour les sous-titres de graphique */
+    margin-bottom: 15px;
+    padding-left: 0; /* Plus de padding avec bordure */
+    border-left: none;
+    font-weight: 500;
+}
+.chart-controls-fixed { /* existant */
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- Loader et Messages de Statut --- */
+.loader {
+    border: 4px solid var(--medium-gray); /* Bordure plus fine */
+    border-top: 4px solid var(--primary-color); /* Couleur primaire pour l'animation */
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    animation: spin 0.8s linear infinite; /* Animation un peu plus rapide */
+    margin: 25px auto;
+    display: none;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+#statusMessage, #firebaseStatus {
+    font-size: 0.95em;
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: var(--border-radius);
+}
+#statusMessage:empty, #firebaseStatus:empty { display: none; } /* Masquer si vide */
+/* Style conditionnel pour les messages (à ajouter via JS si besoin: .success, .error) */
+#statusMessage.success, #firebaseStatus.success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+#statusMessage.error, #firebaseStatus.error { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7;}
+
+
+/* Warning text (pour gestion des personnes) */
+.warning-text {
+    color: var(--danger-color) !important; /* Override d'autres styles de p */
+    background-color: #fdecea;
+    border: 1px solid var(--danger-color);
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Overlay pour spinner PDF (vous l'avez fourni) */
+.pdf-spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Au-dessus de tout */
+}
+.pdf-spinner { /* Réutilise l'animation .loader mais peut être stylé différemment */
+    border: 5px solid var(--medium-gray);
+    border-top: 5px solid var(--secondary-color); /* Vert pour le spinner PDF */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+.pdf-spinner-overlay p {
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.dashboard-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Espace entre les groupes de filtres */
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: var(--light-gray);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espace entre label et select/input */
+}
+
+.filter-group label {
+    font-weight: 500;
+    white-space: nowrap; /* Empêche le label de passer à la ligne */
+}
+
+.filter-group select,
+.filter-group input[type="text"] {
+    padding: 0.5rem 0.75rem; /* Padding plus petit pour les contrôles de filtre */
+    font-size: 0.9rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--white-color);
+}
+.filter-group input[type="text"] {
+    min-width: 200px; /* Largeur minimale pour le champ de recherche */
+}
+
+
+/* Style pour les en-têtes de colonnes triables */
+#hoursTableDashboard th {
+    cursor: pointer;
+    position: relative; /* Pour le positionnement de la flèche */
+    user-select: none; /* Empêcher la sélection de texte sur clic */
+}
+
+#hoursTableDashboard th:hover {
+    background-color: #dcdcdc; /* Un gris légèrement plus foncé au survol */
+}
+
+.sort-arrow {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 5px;
+    vertical-align: middle;
+    opacity: 0.4; /* Flèche discrète par défaut */
+}
+
+#hoursTableDashboard th.sorted-asc .sort-arrow {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid var(--text-color); /* Flèche vers le haut */
+    opacity: 1;
+}
+
+#hoursTableDashboard th.sorted-desc .sort-arrow {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--text-color); /* Flèche vers le bas */
+    opacity: 1;
+}
+
+/* Pagination (optionnel, mais utile pour de grandes listes) */
+.pagination-controls {
+    text-align: center;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.pagination-controls button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 8px 12px;
+}
+.pagination-controls button:disabled {
+    background-color: var(--medium-gray);
+    color: var(--dark-gray);
+    cursor: not-allowed;
+}
+.pagination-controls #pageInfo {
+    font-weight: 500;
+}
+
+/* style.css */
+/* ... (styles existants) ... */
+
+/* Styles spécifiques pour la vue Charts avec des cartes */
+#charts-exportable-content {
+    padding: 10px; /* Un peu de padding pour le conteneur exportable */
+}
+
 #charts-annual-summary-container .annual-chart-group {
-    background-color: transparent; /* Le groupe lui-même n'a pas de fond */
+    background-color: var(--white-color); /* Fond blanc pour le groupe de l'année */
+    padding: 20px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-md);
+    margin-bottom: 30px; /* Espace entre les groupes annuels */
+}
+
+#charts-annual-summary-container .year-title {
+    font-size: 1.8em;
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+    text-align: center;
+}
+
+/* Styles pour les "cartes" de chaque section de graphique */
+.chart-card {
+    background-color: var(--white-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: var(--box-shadow-sm);
+    transition: box-shadow 0.3s ease-in-out;
+}
+.chart-card:hover {
+    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,.1); /* Ombre légèrement plus prononcée au survol */
+}
+
+.chart-card .chart-section-title { /* Titre de la carte/section */
+    font-size: 1.3em;
+    color: var(--text-color); /* Couleur plus foncée pour le titre de carte */
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--medium-gray); /* Séparateur sous le titre de carte */
+    font-weight: 600;
+}
+
+.chart-card .chart-container {
+    /* Le style existant de .chart-container (hauteur, largeur max, etc.) 
+       est toujours bon, mais on enlève la bordure et le padding puisqu'ils 
+       sont maintenant sur .chart-card */
     padding: 0;
     border: none;
-    box-shadow: none;
-    margin-bottom: 35px;
+    background-color: transparent; /* Le fond est géré par la carte */
+    height: 45vh; /* Hauteur par défaut pour les graphiques dans les cartes */
 }
-#charts-annual-summary-container .year-title {
-    font-family: var(--font-family-headings); font-size: 1.6em; color: var(--text-secondary);
-    text-align: center; margin-bottom: 25px; padding-bottom: 12px; position: relative;
-}
-#charts-annual-summary-container .year-title::after {
-    content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 70px; height: 2.5px; background-color: var(--primary-color); opacity: 0.5; border-radius: 3px;
-}
-.charts-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:20px; }
-.chart-card {
-    background: var(--bg-card); backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur);
-    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--border-radius-lg);
-    padding: 20px; box-shadow: var(--shadow-soft);
-    display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.chart-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-medium); }
-.chart-card .chart-section-title {
-    font-family: var(--font-family-headings); font-size: 1.1em; color: var(--text-primary);
-    font-weight: 600; margin-bottom: 4px; padding-bottom: 0; border-bottom: none;
-}
-.chart-card .chart-key-metric { font-size:0.85em; color:var(--text-secondary); margin-bottom:15px; font-style: italic; }
-.chart-card .chart-container {
-    flex-grow: 1; min-height: 260px; background-color: transparent; border: none; padding: 0;
-}
-.charts-grid .chart-card.pie-chart-card .chart-container { min-height: 240px; }
 
+/* Optionnel: une grille pour afficher plusieurs graphiques côte à côte DANS un .annual-chart-group */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); /* Grille responsive */
+    gap: 25px; /* Espace entre les cartes de graphiques */
+}
+.charts-grid .chart-card { /* Si une carte est dans une grille, elle prendra la largeur de la colonne */
+    width: 100%;
+}
+/* Spécifique pour le pie chart si on veut qu'il soit plus petit dans une grille */
+.charts-grid .chart-card.pie-chart-card .chart-container {
+    height: 35vh; 
+}
+
+/* Boutons de contrôle en bas */
 #template-charts .controls.chart-controls-fixed {
-    background-color: var(--bg-card); backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur);
-    border-top: 1px solid var(--border-color); box-shadow: 0 -2px 8px rgba(46, 52, 64, 0.05);
-    padding: 12px 20px; border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-    position: sticky; bottom: 0; z-index: 900; margin-top: 20px;
+    background-color: var(--white-color); /* Assurer un fond si les cartes sont au-dessus */
+    padding: 15px;
+    margin-top: 10px; /* Moins d'espace si le contenu principal est déjà dans des cartes */
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 5px rgba(0,0,0,.05); /* Ombre subtile en haut */
+    position: sticky; /* Faire coller les contrôles en bas */
+    bottom: 0;
+    z-index: 900; /* Sous le header */
 }
-
-/* Loader et Statut */
-.loader { /* Style global du loader, peut être utilisé partout */
-    border:3px solid rgba(var(--primary-color-rgb), 0.2); border-top-color:var(--primary-color);
-    border-radius:50%; width:30px; height:30px; animation:spin .7s linear infinite; margin:20px auto;
-}
-#statusMessage, #firebaseStatus { font-size:0.9em; text-align:center; margin-top:15px; padding:8px 12px; border-radius:var(--border-radius-sm); }
-#statusMessage.success, #firebaseStatus.success { background-color:rgba(var(--success-color-rgb),0.1); color:var(--success-color); border:1px solid rgba(var(--success-color-rgb),0.3); }
-#statusMessage.error, #firebaseStatus.error { background-color:rgba(var(--danger-color-rgb),0.1); color:var(--danger-color); border:1px solid rgba(var(--danger-color-rgb),0.3); }
-
-.warning-text { color:var(--danger-color) !important; background-color:rgba(var(--danger-color-rgb),0.08); border:1px solid rgba(var(--danger-color-rgb),0.2); padding:10px 15px; border-radius:var(--border-radius-md); margin-bottom:20px; font-weight:500; font-size:0.9em; }
-
-/* Overlay Spinner PDF */
-.pdf-spinner-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(236, 239, 244, 0.85); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; }
-.pdf-spinner { border:4px solid rgba(var(--secondary-color-rgb),0.25); border-top-color:var(--secondary-color); border-radius:50%; width:50px; height:50px; animation:spin .8s linear infinite; }
-.pdf-spinner-overlay p { margin-top:15px; font-size:1em; color:var(--text-primary); font-weight:500; }
-
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
