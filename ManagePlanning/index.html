@@ -1,1 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Tableau de Bord Planning</title>
+    <link rel="stylesheet" href="style.css">
 
+    <!-- SDKs (chargés une seule fois) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#upload">Upload PDF</a></li>
+                <li><a href="#dashboard">Tableau de Bord</a></li>
+                <li><a href="#charts">Graphiques (>35h)</a></li>
+                <li><a href="#manage-persons">Gestion Personnes</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div id="app-content">
+            <!-- Le contenu des vues sera injecté ici -->
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2023 Mon Application de Planning - Tous droits réservés.</p>
+    </footer>
+
+    <!-- Templates HTML pour chaque vue -->
+    <template id="template-upload">
+        <div class="container">
+            <h1>Calculateur d'Heures de Travail depuis PDF</h1>
+            <input type="file" id="pdfFile" accept=".pdf">
+            <div class="button-container">
+                <button id="calculateButton">Calculer les Heures</button>
+                <button id="exportCsvButton" style="display:none;">Exporter en CSV</button>
+                <button id="saveFirebaseButton" style="display:none;">Enregistrer sur Firebase</button>
+            </div>
+            <div class="loader" id="view-loader"></div>
+            <div id="results">
+                <h2>Résultats :</h2>
+                <pre id="output"></pre>
+            </div>
+            <div id="firebaseStatus"></div>
+        </div>
+    </template>
+
+    <template id="template-dashboard">
+        <div class="container">
+            <h1>Tableau de Bord des Heures de Travail</h1>
+            <div class="controls">
+                <label for="personFilter">Filtrer par personne:</label>
+                <select id="personFilter">
+                    <option value="">Toutes les personnes</option>
+                </select>
+                <button id="refreshButtonDashboard">Rafraîchir les Données</button>
+            </div>
+            <div class="loader" id="view-loader"></div>
+            <div id="statusMessage"></div>
+            <table id="hoursTable">
+                <thead>
+                    <tr>
+                        <th>Personne</th>
+                        <th>Semaine</th>
+                        <th>Heures Travaillées</th>
+                        <th>Date d'Enregistrement</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </template>
+
+    <template id="template-charts">
+        <div class="container">
+            <h1>Graphique : Semaines > 35 Heures par Personne</h1>
+            <div class="controls">
+                <button id="refreshButtonChart">Rafraîchir le Graphique</button>
+            </div>
+            <div class="loader" id="view-loader"></div>
+            <div id="statusMessage"></div>
+            <div class="chart-container">
+                <canvas id="weeksOver35hChart"></canvas>
+            </div>
+        </div>
+    </template>
+
+    <template id="template-manage-persons">
+        <div class="container">
+            <h1>Gestion des Personnes Enregistrées</h1>
+            <p class="warning-text" style="color: red; text-align: center; font-weight: bold;">
+                ATTENTION : La suppression des données d'une personne est DÉFINITIVE.
+            </p>
+            <div class="controls">
+                <button id="refreshPersonsListButton">Rafraîchir la Liste</button>
+            </div>
+            <div class="loader" id="view-loader"></div>
+            <div id="statusMessage"></div>
+            <table id="personsTable">
+                <thead>
+                    <tr>
+                        <th>Nom de la Personne</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="personsTableBody">
+                    <!-- Les personnes seront listées ici -->
+                </tbody>
+            </table>
+        </div>
+    </template>
+    
+    <!-- Script principal de la SPA -->
+    <script src="script.js" type="module"></script>
+</body>
+</html>
