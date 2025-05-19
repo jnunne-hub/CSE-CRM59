@@ -19,36 +19,19 @@
             cursor: pointer;
             font-size: 16px;
         }
-        button#calculateButton {
-            background-color: #5cb85c;
-        }
-        button#calculateButton:hover {
-            background-color: #4cae4c;
-        }
-        button#exportCsvButton {
-            background-color: #007bff;
-            margin-top: 15px;
-        }
-        button#exportCsvButton:hover {
-            background-color: #0056b3;
-        }
+        button#calculateButton { background-color: #5cb85c; }
+        button#calculateButton:hover { background-color: #4cae4c; }
+        button#exportCsvButton { background-color: #007bff; margin-top: 15px; }
+        button#exportCsvButton:hover { background-color: #0056b3; }
         #results { margin-top: 20px; padding: 10px; background-color: #e9e9e9; border-radius: 4px; }
         #results h2 { margin-top: 0; }
         #results pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
         .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-            display: none;
+            border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%;
+            width: 30px; height: 30px; animation: spin 1s linear infinite;
+            margin: 20px auto; display: none;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
@@ -56,7 +39,7 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
         } else {
             console.error("ALERTE: pdf.js n'est pas chargé.");
-            alert("ALERTE: pdf.js n'a pas pu être chargé. L'application ne fonctionnera pas.");
+            alert("ALERTE: pdf.js n'a pas pu être chargé.");
         }
     </script>
 </head>
@@ -74,7 +57,24 @@
     </div>
 
     <script>
-        const WORK_ACTIVITIES = ['VAL_AG2R_MAIL', 'VAL_AG2R', 'For_Formation Syndicale'];
+        // **MODIFIÉ : Liste des activités considérées comme du travail.**
+        // Ajustez cette liste en fonction des besoins.
+        // Je suppose que tout ce qui commence par VAL_ ou Reu_ est du travail.
+        // Vous pouvez lister explicitement tous les codes si vous préférez.
+        const WORK_ACTIVITY_PREFIXES = ['VAL_', 'Reu_']; // Pour une vérification par préfixe
+        // Ou une liste explicite (plus sûre si les préfixes sont ambigus):
+        /*
+        const WORK_ACTIVITIES = [
+            'VAL_AG2R_MAIL', 'VAL_AG2R', 'For_Formation Syndicale',
+            'VAL_FORM INIT_ENEDIS', 'VAL_ENEDIS_FO', 'VAL_ENEDIS_BO1', 'VAL_EHS',
+            'VAL_EHS_SERENITE', 'VAL_EHS_PFDC 1', 'VAL_EHS_PFDC 3', 'VAL_FORM CONT_EHS',
+            'Reu_Visite Médicale', 'Reu_Entretien annuel de performance',
+            'VAL_ENEDIS ACCUEIL_ACHEMINEMENT FO', 'VAL_ENEDIS ACCUEIL_DISTRIBUTEURS FO'
+            // Ajoutez d'autres codes ici si nécessaire
+        ];
+        */
+
+
         const MONTH_MAP_FR = {
             'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3, 'mai': 4, 'juin': 5,
             'juillet': 6, 'août': 7, 'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
@@ -122,63 +122,53 @@
                         const page = await pdf.getPage(i);
                         const textContent = await page.getTextContent();
                         const pageText = textContent.items.map(item => item.str.trim()).filter(s => s.length > 0).join('\n');
-                        fullText += pageText + '\n\n';
+                        fullText += pageText + '\n\n'; // Double saut de ligne entre les pages pour aider au parsing
                     }
                     
-                    // --- MODIFICATION EXTRACTION NOM ---
-                    personName = "Inconnu"; // Assurer une réinitialisation
+                    // Décommentez pour voir le texte brut si besoin
+                    // console.log("Texte extrait du PDF (fullText) AVANT split et traitement:\n" + "```\n" + fullText + "\n```");
+                    
+                    // **MODIFIÉ : Extraction du nom de la personne**
+                    personName = "Inconnu"; 
                     const linesOfText = fullText.split('\n');
                     const planningLineRegex = /Planning de travail pour\s+(.+)/i;
-                    let potentialNameLine = "";
-
+                    
                     for (const line of linesOfText) {
                         const match = line.match(planningLineRegex);
                         if (match && match[1]) {
-                            potentialNameLine = match[1].trim();
-                            // Dans votre PDF, le nom et la date de début du planning sont sur la même ligne que "Planning de travail pour..."
-                            // donc on peut traiter `potentialNameLine` directement.
+                            // Le nom est ce qui suit "Planning de travail pour "
+                            // Pour Ludivine LAUDE, la date de période du planning est sur une ligne *séparée*.
+                            // On essaie de prendre le nom et de s'arrêter avant "peopleware" si présent.
+                            let extractedName = match[1].trim();
+                            const peoplewareIndex = extractedName.toLowerCase().indexOf("peopleware");
+                            if (peoplewareIndex !== -1) {
+                                extractedName = extractedName.substring(0, peoplewareIndex).trim();
+                            }
+                            // On s'arrête aussi si on rencontre un jour de semaine (indiquant le début de la plage de dates)
+                            const dayOfWeekInNameRegex = /\s+(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)/i;
+                            const dayMatchInName = extractedName.match(dayOfWeekInNameRegex);
+                            if (dayMatchInName) {
+                                extractedName = extractedName.substring(0, dayMatchInName.index).trim();
+                            }
+
+                            if (extractedName) {
+                                personName = extractedName;
+                            }
+                            console.log("Nom de la personne potentiellement extrait:", personName);
                             break; 
                         }
                     }
-
-                    if (potentialNameLine) {
-                        // Le nom est ce qui se trouve AVANT la plage de dates du planning (ex: "jeudi 01. mai...")
-                        // ou avant "peopleware" si c'est ce qui suit.
-                        const globalDateRangeRegexOnLine = /(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s+\d{2}\.\s+\w+/i;
-                        const dateRangeMatch = potentialNameLine.match(globalDateRangeRegexOnLine);
-
-                        if (dateRangeMatch && dateRangeMatch.index > 0) { //  index > 0 pour s'assurer qu'il y a du texte avant la date
-                            personName = potentialNameLine.substring(0, dateRangeMatch.index).trim();
-                        } else {
-                            // Si pas de date, peut-être que "peopleware" est collé
-                            // ou que le nom est seul sur la ligne après "Planning de travail pour"
-                            const peoplewareIndex = potentialNameLine.toLowerCase().indexOf("peopleware");
-                            if (peoplewareIndex > 0) { 
-                                 personName = potentialNameLine.substring(0, peoplewareIndex).trim();
-                            } else if (!dateRangeMatch) { // S'il n'y a pas de date ET pas de peopleware, on prend tout
-                                personName = potentialNameLine; 
-                            }
-                            // Si dateRangeMatch existe mais index est 0, personName reste "Inconnu"
-                        }
-                        
-                        if (!personName || personName.length === 0) { // Vérifier si le nom est vide après trim
-                            personName = "Inconnu"; // Remettre à Inconnu si vide
-                            console.warn("Nom de la personne non trouvé ou vide après nettoyage. Utilisation de 'Inconnu'.");
-                        } else {
-                            console.log("Nom de la personne extrait:", personName);
-                        }
-
-                    } else {
-                        console.warn("Ligne 'Planning de travail pour' non trouvée. Utilisation de 'Inconnu' pour le nom.");
+                     if (personName === "Inconnu") {
+                        console.warn("Ligne 'Planning de travail pour' non trouvée ou nom non isolé. Utilisation de 'Inconnu'.");
                     }
-                    // --- FIN MODIFICATION EXTRACTION NOM ---
 
 
                     const weeklyHours = parseScheduleAndCalculateHours(fullText);
                     currentWeeklyHoursData = weeklyHours;
                     displayResults(weeklyHours);
 
-                } catch (error) {
+                } catch (error)
+                {
                     console.error("Erreur lors du traitement du PDF:", error);
                     outputElement.textContent = `Erreur: ${error.message}.`;
                 } finally {
@@ -201,7 +191,10 @@
             const day = parseInt(parts[0].replace('.', ''));
             const monthName = parts[1].toLowerCase().replace('.', '');
             const year = parseInt(parts[2]);
-            if (isNaN(day) || isNaN(year) || !(monthName in MONTH_MAP_FR)) return null;
+            if (isNaN(day) || isNaN(year) || !(monthName in MONTH_MAP_FR)) {
+                 console.warn(`parseDateString: Échec pour '${dateStrPart}' -> day:${day}, month:${monthName}, year:${year}`);
+                return null;
+            }
             return new Date(year, MONTH_MAP_FR[monthName], day);
         }
 
@@ -222,23 +215,35 @@
             if (diffMs < 0) { diffMs += 24 * 60 * 60 * 1000; }
             return diffMs / (1000 * 60 * 60);
         }
+        
+        // **MODIFIÉ : Fonction pour vérifier si une activité compte comme travail**
+        function isWorkActivity(activityDescription) {
+            const normalizedActivity = activityDescription.toUpperCase().trim();
+            return WORK_ACTIVITY_PREFIXES.some(prefix => normalizedActivity.startsWith(prefix));
+            // Si vous utilisez la liste WORK_ACTIVITIES explicite :
+            // return WORK_ACTIVITIES.includes(normalizedActivity);
+        }
 
         function parseScheduleAndCalculateHours(text) {
+            console.log("Début de parseScheduleAndCalculateHours.");
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            // console.log("Lignes après split et trim (avant traitement logique):", JSON.stringify(lines, null, 2));
+
             const weeklyHours = {};
             let currentDate = null;
             let currentDayMarkedAsFullDayEvent = false;
             let potentielJourSemaine = null;
 
             const dayOfWeekRegex = /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/i;
-            const shortDateRegex = /^(\d{2}\.\s*\w+\.?\s+\d{4})$/i;
-            const timeSlotRegex = /(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\s+([A-Za-z0-9_]+)/;
-            const fullDayRegex = /^Journée entière\s+([A-Za-z0-9_]+)/i;
+            const shortDateRegex = /^(\d{2}\.\s*\w+\.?\s+\d{4})$/i; 
+            // **MODIFIÉ : Regex pour plage horaire, capture toute la description de l'activité**
+            const timeSlotRegex = /(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\s+(.+)/; 
+            const fullDayRegex = /^Journée entière\s+(.+)/i; // Capture aussi toute la description
 
             const ignorePatterns = [
-                /Planning de travail pour/i, // Modifié pour être plus général et ignorer toute la ligne
-                /jeudi\s+\d{2}\.\s+\w+\s+\d{4}\s+-\s+lundi\s+\d{2}\.\s+\w+\s+\d{4}/i, // La plage globale
-                /Date\s+Planning de travail/i,
+                /Planning de travail pour/i, 
+                /lundi\s+\d{2}\.\s+\w+\s+\d{4}\s+-\s+jeudi\s+\d{2}\.\s+\w+\s+\d{4}/i, // Plage globale du planning
+                /^Date\s+Planning de travail$/i, // En-tête de colonne
                 /Page \d+ sur \d+ - Téléchargé le/i,
                 /© \d{4} peopleware/i,
                 /^peopleware$/i,
@@ -248,16 +253,16 @@
 
             for (let i = 0; i < lines.length; i++) {
                 let trimmedLine = lines[i];
+                // Décommentez pour log détaillé
+                // console.log(`[Ligne ${i}] Traitement: "${trimmedLine}" | Date: ${currentDate ? currentDate.toISOString().slice(0,10) : 'null'} | FullDay: ${currentDayMarkedAsFullDayEvent} | PotJour: ${potentielJourSemaine}`);
 
-                // Si la ligne contient le nom de la personne, elle est gérée par l'extraction du nom plus haut
-                // et par l'ignorePattern /Planning de travail pour/i.
-                // Si le nom est seul sur une ligne (ex: "Julien NUNNE"), il ne correspondra à aucune regex
-                // et sera ignoré par la logique qui attend un jour/date/activité.
-                if (trimmedLine === personName && personName !== "Inconnu") { // Ignorer la ligne si c'est juste le nom
+
+                if (trimmedLine === personName && personName !== "Inconnu") {
+                    // console.log(`  -> Ligne ignorée (nom personne): "${trimmedLine}"`);
                     continue;
                 }
-
                 if (ignorePatterns.some(pattern => pattern.test(trimmedLine))) {
+                    // console.log(`  -> Ligne ignorée (pattern): "${trimmedLine}"`);
                     continue;
                 }
 
@@ -266,6 +271,7 @@
                     potentielJourSemaine = dayMatch[1];
                     currentDate = null; 
                     currentDayMarkedAsFullDayEvent = false;
+                    // console.log(`  -> Potentiel jour: "${potentielJourSemaine}".`);
                     continue;
                 }
 
@@ -277,37 +283,57 @@
                         if (newDate) {
                             currentDate = newDate;
                             currentDayMarkedAsFullDayEvent = false;
+                            // console.log(`  -> Date confirmée: ${currentDate.toISOString().slice(0,10)} pour jour "${potentielJourSemaine}"`);
                             potentielJourSemaine = null; 
 
                             if (i + 1 < lines.length) {
                                 const nextLineFullDayMatch = lines[i+1].match(fullDayRegex);
                                 if (nextLineFullDayMatch) {
+                                    const fullDayActivityDesc = nextLineFullDayMatch[1].trim();
+                                    // On ne compte pas les heures pour Abs_Repos Hebdo, Abs_Jour Férié, Cge_Congé payé etc.
+                                    if (!fullDayActivityDesc.startsWith("Abs_") && !fullDayActivityDesc.startsWith("Cge_")) {
+                                        // Si une "Journée entière" devait compter des heures (ex: Formation)
+                                        // il faudrait une logique ici pour attribuer X heures.
+                                        // Pour l'instant, on marque juste que c'est une journée entière.
+                                    }
                                     currentDayMarkedAsFullDayEvent = true;
+                                    // console.log(`    -> "Journée entière" (${fullDayActivityDesc}) sur ligne suivante.`);
                                     i++; 
                                     continue; 
                                 }
                             }
                             continue; 
                         } else {
-                            potentielJourSemaine = null;
+                            // console.warn(`  -> Échec parsing date "${dateStrPart}" après jour "${potentielJourSemaine}".`);
+                            potentielJourSemaine = null; // Reset car la date attendue n'a pas été parsée
                         }
                     } else {
                          const fullDayAfterDayOfWeekMatch = trimmedLine.match(fullDayRegex);
                          if (fullDayAfterDayOfWeekMatch) {
+                            // console.warn(`  -> "Journée entière" après jour de semaine "${potentielJourSemaine}", SANS date. Ignoré.`);
                              potentielJourSemaine = null; 
                              currentDate = null; 
+                         } else if (trimmedLine.length > 0) { // Si ce n'est pas une date et pas vide
+                            // console.log(`  -> Ligne "${trimmedLine}" après "${potentielJourSemaine}" n'est pas une date. Reset jour potentiel.`);
+                             potentielJourSemaine = null; // La structure attendue est rompue.
                          }
                     }
                 }
                 
                 if (currentDate && currentDayMarkedAsFullDayEvent) {
+                    // console.log(`  -> Journée ${currentDate.toISOString().slice(0,10)} entière. Ligne activité ignorée: "${trimmedLine}"`);
                     continue;
                 }
 
                 if (currentDate) { 
-                    const fullDayMatch = trimmedLine.match(fullDayRegex);
-                    if (fullDayMatch) {
+                    const fullDayMatchOnActivityLine = trimmedLine.match(fullDayRegex);
+                    if (fullDayMatchOnActivityLine) { // "Journée entière" peut être sur la ligne d'activité elle-même
+                        const fullDayActivityDesc = fullDayMatchOnActivityLine[1].trim();
+                         if (!fullDayActivityDesc.startsWith("Abs_") && !fullDayActivityDesc.startsWith("Cge_")) {
+                            // Logique pour heures pour journée entière si besoin
+                         }
                         currentDayMarkedAsFullDayEvent = true;
+                        // console.log(`  -> "Journée entière" (${fullDayActivityDesc}) pour ${currentDate.toISOString().slice(0,10)} sur ligne activité.`);
                         continue;
                     }
 
@@ -315,18 +341,28 @@
                     if (timeSlotMatch) {
                         const startTime = timeSlotMatch[1];
                         const endTime = timeSlotMatch[2];
-                        const activity = timeSlotMatch[3];
+                        const activityDescription = timeSlotMatch[3].trim(); // Toute la description
+                        // console.log(`  -> Plage horaire: ${startTime}-${endTime} "${activityDescription}" pour ${currentDate.toISOString().slice(0,10)}`);
 
-                        if (WORK_ACTIVITIES.includes(activity)) {
+                        if (isWorkActivity(activityDescription)) { // Utilisation de la nouvelle fonction
                             const duration = calculateDuration(startTime, endTime);
                             if (duration > 0) {
                                 const weekKey = getWeekNumber(currentDate);
                                 weeklyHours[weekKey] = (weeklyHours[weekKey] || 0) + duration;
+                                // console.log(`    -> Ajouté ${duration.toFixed(2)}h pour "${activityDescription}" (Semaine ${weekKey})`);
                             }
+                        } else {
+                            // console.log(`    -> Activité "${activityDescription}" non comptée comme travail.`);
                         }
+                    } else if (trimmedLine.length > 0 && !dayOfWeekRegex.test(trimmedLine) && !shortDateRegex.test(trimmedLine)) {
+                        // console.log(`  -> Ligne non reconnue comme activité pour ${currentDate.toISOString().slice(0,10)}: "${trimmedLine}"`);
                     }
+                } else if (trimmedLine.length > 0 && !dayMatch && !potentielJourSemaine) {
+                    // console.log(`  -> Ligne ignorée (pas de contexte de date valide): "${trimmedLine}"`);
                 }
             }
+
+            console.log("Fin de parseScheduleAndCalculateHours. weeklyHours:", JSON.stringify(weeklyHours, null, 2));
             return weeklyHours;
         }
 
@@ -340,8 +376,8 @@
                 resultText += "Aucune heure de travail calculée.\n";
                 resultText += "Vérifications possibles :\n";
                 resultText += "- Le fichier PDF est-il bien celui attendu et lisible ?\n";
-                resultText += "- Le format du PDF correspond-il à ce que le script attend ?\n";
-                resultText += "- Les activités comptées comme travail sont : " + WORK_ACTIVITIES.join(', ') + "\n";
+                resultText += "- Les activités comptées comme travail sont-elles bien définies (WORK_ACTIVITY_PREFIXES ou WORK_ACTIVITIES) ?\n";
+                resultText += `- Préfixes d'activité comptés : ${WORK_ACTIVITY_PREFIXES.join(', ')}\n`;
                 resultText += "- Ouvrez la console du navigateur (F12) pour d'éventuels messages d'erreur ou de débogage.\n";
                 exportButton.style.display = 'none';
             } else {
@@ -358,21 +394,17 @@
                 alert("Aucune donnée à exporter.");
                 return;
             }
-
             let csvContent = "Personne,Semaine,HeuresTravaillees\r\n"; 
-
             const sortedWeeks = Object.keys(currentWeeklyHoursData).sort();
             sortedWeeks.forEach(week => {
                 const hours = currentWeeklyHoursData[week].toFixed(2);
                 const safePersonName = `"${personName.replace(/"/g, '""')}"`;
                 csvContent += `${safePersonName},"${week}","${hours}"\r\n`; 
             });
-
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            
             const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             const safeFileNamePerson = personName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
             link.setAttribute("download", `heures_travail_${safeFileNamePerson}_${timestamp}.csv`);
@@ -381,7 +413,6 @@
             link.click();
             document.body.removeChild(link);
         }
-
     </script>
 </body>
 </html>
