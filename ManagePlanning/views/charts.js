@@ -1,18 +1,40 @@
+// views/charts.js
+
 import { db, showViewLoader, setViewStatus } from '../script.js';
 
 const HIGH_THRESHOLD_HOURS = 35;
 const LOW_THRESHOLD_HOURS = 35; // Semaines basses seront < ce seuil (et > 0)
 
-let activeChartInstances = [];
+let activeChartInstances = []; // Stocker toutes les instances de graphiques actifs sur la page
+
+// Fonctions spinner (similaires à votre reportGenerator.js)
+function showPdfSpinner() {
+    const spinnerOverlay = document.getElementById('pdfSpinnerOverlay');
+    if (spinnerOverlay) spinnerOverlay.style.display = 'flex';
+}
+
+function hidePdfSpinner() {
+    const spinnerOverlay = document.getElementById('pdfSpinnerOverlay');
+    if (spinnerOverlay) spinnerOverlay.style.display = 'none';
+}
+
 
 export function initChartsView() {
     console.log("Initialisation de la vue Charts");
     const refreshButton = document.getElementById('refreshButtonChart');
-    if (refreshButton) refreshButton.addEventListener('click', loadAndProcessData_ChartsView);
+    const exportPdfButton = document.getElementById('exportChartsToPdfButton');
 
+    if (refreshButton) refreshButton.addEventListener('click', loadAndProcessData_ChartsView);
+    if (exportPdfButton) exportPdfButton.addEventListener('click', exportChartsViewToPdfWithJsPDF);
+    
     if (typeof Chart === 'undefined') {
         setViewStatus("Chart.js n'est pas chargé.");
         return;
+    }
+    // Vérifier jsPDF et html2canvas
+    if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') {
+        console.warn("jsPDF ou html2canvas n'est pas chargé. L'export PDF ne fonctionnera pas.");
+        if(exportPdfButton) exportPdfButton.disabled = true;
     }
     loadAndProcessData_ChartsView();
 }
@@ -23,13 +45,147 @@ export function cleanupChartsView() {
     console.log("Toutes les instances de graphiques ont été détruites.");
 }
 
+async function exportChartsViewToPdfWithJsPDF() {
+    const exportButton = document.getElementById('exportChartsToPdfButton');
+    if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') {
+        alert("Les librairies jsPDF ou html2canvas ne sont pas chargées.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    
+    setViewStatus("Génération du PDF en cours...");
+    if (exportButton) exportButton.disabled = true;
+    showPdfSpinner(); // Utiliser votre spinner
+
+    const originalChartDefaultsAnimation = Chart.defaults.animation;
+    Chart.defaults.animation = false; // Désactiver les animations pour la capture
+
+    const PAGE_MARGIN = 15;
+    let currentY = PAGE_MARGIN;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const usableWidth = pageWidth - (2 * PAGE_MARGIN);
+    let pageAdded = false;
+
+    // Fonction pour ajouter une nouvelle page si nécessaire
+    function checkAndAddPage(neededHeight = 30) {
+        if (currentY + neededHeight > doc.internal.pageSize.getHeight() - PAGE_MARGIN) {
+            doc.addPage();
+            currentY = PAGE_MARGIN;
+            pageAdded = true;
+            return true;
+        }
+        pageAdded = false;
+        return false;
+    }
+
+    try {
+        // Titre principal du document PDF
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("Analyse Détaillée des Heures de Travail", pageWidth / 2, currentY, { align: 'center' });
+        currentY += 15;
+
+        // Itérer sur chaque groupe annuel de graphiques
+        const annualGroups = document.querySelectorAll('#charts-annual-summary-container .annual-chart-group');
+
+        for (const group of annualGroups) {
+            if (pageAdded) { // Si une page a été ajoutée juste avant, on n'a pas besoin de vérifier l'espace pour le titre de l'année
+                 // Mais il faut s'assurer que currentY est bien au début de la page.
+            } else {
+                checkAndAddPage(20); // Espace pour le titre de l'année
+            }
+
+            const yearTitleElement = group.querySelector('.year-title');
+            if (yearTitleElement) {
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text(yearTitleElement.textContent, PAGE_MARGIN, currentY);
+                currentY += 8;
+            }
+
+            const chartSections = group.querySelectorAll('.chart-section');
+            for (const section of chartSections) {
+                checkAndAddPage(15); // Espace pour le titre de section
+
+                const sectionTitleElement = section.querySelector('.chart-section-title');
+                if (sectionTitleElement) {
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "italic");
+                    doc.text(sectionTitleElement.textContent, PAGE_MARGIN, currentY);
+                    currentY += 7;
+                }
+
+                const canvasElement = section.querySelector('canvas');
+                if (canvasElement) {
+                    // S'assurer que le graphique est bien dessiné (surtout si on vient de le créer)
+                    const chartInstance = activeChartInstances.find(c => c.canvas === canvasElement);
+                    if (chartInstance) {
+                         // chartInstance.update('none'); // S'assurer qu'il est rendu sans animation
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 150)); // Petite pause pour le rendu
+
+                    try {
+                        const canvasImg = await html2canvas(canvasElement, { 
+                            scale: 2, 
+                            backgroundColor: '#ffffff', // Fond blanc pour la capture
+                            logging: false,
+                            useCORS: true // Important si les graphiques utilisent des images/polices externes (peu probable ici)
+                        });
+                        const imgData = canvasImg.toDataURL('image/png'); // Utiliser PNG pour meilleure qualité des graphiques
+                        
+                        const imgProps = doc.getImageProperties(imgData);
+                        let imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+                        let imgWidth = usableWidth;
+
+                        // Ajuster si l'image est trop haute pour la page
+                        const maxHeightOnPage = doc.internal.pageSize.getHeight() - currentY - PAGE_MARGIN;
+                        if (imgHeight > maxHeightOnPage && maxHeightOnPage > 30) { // Si l'image est trop haute mais qu'on a de la place
+                            imgHeight = maxHeightOnPage;
+                            imgWidth = (imgProps.width * imgHeight) / imgProps.height; // Recalculer la largeur pour garder l'aspect ratio
+                        }
+
+                        checkAndAddPage(imgHeight + 5); // Espace pour l'image + petite marge
+                        
+                        const imgX = (pageWidth - imgWidth) / 2; // Centrer l'image
+                        doc.addImage(imgData, 'PNG', imgX, currentY, imgWidth, imgHeight);
+                        currentY += imgHeight + 7; // Marge après l'image
+                    } catch(e) {
+                        console.error("Erreur lors de la capture du canvas:", canvasElement.id, e);
+                        doc.setTextColor(255,0,0);
+                        doc.text("Erreur de capture du graphique.", PAGE_MARGIN, currentY);
+                        doc.setTextColor(0,0,0);
+                        currentY += 7;
+                    }
+                }
+            }
+            currentY += 5; // Espace entre les groupes annuels
+        }
+
+        doc.save('analyse_graphiques_heures.pdf');
+        setViewStatus("PDF des graphiques généré et téléchargé.");
+
+    } catch (error) {
+        console.error("Erreur globale lors de la génération du PDF avec jsPDF:", error);
+        setViewStatus("Erreur lors de la génération du PDF.");
+    } finally {
+        Chart.defaults.animation = originalChartDefaultsAnimation; // Restaurer
+        if (exportButton) exportButton.disabled = false;
+        hidePdfSpinner(); // Utiliser votre spinner
+    }
+}
+
+
+// --- Le reste du fichier (loadAndProcessData_ChartsView, createChartSubSection, renderBarChart, renderPieChart) ---
+// ... reste identique à la version précédente ...
 async function loadAndProcessData_ChartsView() {
     if (!db) { setViewStatus("Firebase non initialisé."); return; }
     if (typeof Chart === 'undefined') { setViewStatus("Chart.js non chargé."); return; }
 
     showViewLoader(true);
     setViewStatus('Chargement et traitement des données pour les graphiques annuels...');
-    cleanupChartsView();
+    cleanupChartsView(); // Nettoyer les graphiques précédents
 
     const chartsAnnualContainer = document.getElementById('charts-annual-summary-container');
     if (!chartsAnnualContainer) {
@@ -37,7 +193,7 @@ async function loadAndProcessData_ChartsView() {
         showViewLoader(false);
         return;
     }
-    chartsAnnualContainer.innerHTML = '';
+    chartsAnnualContainer.innerHTML = ''; // Vider les anciens graphiques
 
     try {
         const querySnapshot = await db.collection("heuresTravail").orderBy("personne").orderBy("semaine", "asc").get();
@@ -47,27 +203,20 @@ async function loadAndProcessData_ChartsView() {
             return;
         }
 
-        // Structure pour stocker les données agrégées :
-        // { annee: { personne: { high: count, low: count, totalActiveWeeks: count, weeklyHours: {"YYYY-WXX": hours, ...}, maxConsecutiveHigh: 0, maxConsecutiveLow: 0 }, ... }, ... }
         const annualData = {};
-        // Structure temporaire pour faciliter le calcul des séries consécutives
-        // { personne: { "YYYY-WXX": hours, ... }, ... }
         const personWeeklyData = {};
-
 
         querySnapshot.forEach(doc => {
             const data = doc.data();
             if (!data.personne || typeof data.heures !== 'number' || !data.semaine) return;
-
             const year = data.semaine.substring(0, 4);
             const hours = data.heures;
 
-            // Initialisation des structures
             if (!annualData[year]) annualData[year] = {};
             if (!annualData[year][data.personne]) {
                 annualData[year][data.personne] = { 
                     high: 0, low: 0, totalActiveWeeks: 0, 
-                    weeklyHours: {}, // Stocker les heures par semaine pour cette personne cette année
+                    weeklyHours: {},
                     maxConsecutiveHigh: 0, 
                     maxConsecutiveLow: 0 
                 };
@@ -76,38 +225,28 @@ async function loadAndProcessData_ChartsView() {
                 personWeeklyData[data.personne] = {};
             }
 
-            // Agrégation simple
             annualData[year][data.personne].totalActiveWeeks++;
-            annualData[year][data.personne].weeklyHours[data.semaine] = hours; // Pour analyse consécutive
+            annualData[year][data.personne].weeklyHours[data.semaine] = hours;
             if (hours > HIGH_THRESHOLD_HOURS) {
                 annualData[year][data.personne].high++;
             } else if (hours > 0 && hours < LOW_THRESHOLD_HOURS) {
                 annualData[year][data.personne].low++;
             }
             
-            // Stockage pour l'analyse consécutive globale par personne
             personWeeklyData[data.personne][data.semaine] = hours;
         });
         
-        // --- Calcul des semaines consécutives ---
         for (const person in personWeeklyData) {
-            const weeksForPerson = Object.keys(personWeeklyData[person]).sort(); // Semaines triées pour cette personne
-            
+            const weeksForPerson = Object.keys(personWeeklyData[person]).sort();
             let currentConsecutiveHigh = 0;
-            let maxConsecutiveHighOverall = 0;
             let currentConsecutiveLow = 0;
-            let maxConsecutiveLowOverall = 0;
             let lastYearProcessed = "";
 
             for (const week of weeksForPerson) {
                 const year = week.substring(0, 4);
                 const hours = personWeeklyData[person][week];
 
-                // Réinitialiser pour chaque nouvelle année pour le stockage dans annualData[year][person]
-                // Mais continuer le calcul global pour maxConsecutiveHighOverall et maxConsecutiveLowOverall si besoin
-                // Ici, nous calculons par année, donc on réinitialise si l'année change.
                 if (year !== lastYearProcessed && lastYearProcessed !== "") {
-                     // S'assurer que les max de l'année précédente sont bien stockés
                     if (annualData[lastYearProcessed] && annualData[lastYearProcessed][person]) {
                         annualData[lastYearProcessed][person].maxConsecutiveHigh = Math.max(annualData[lastYearProcessed][person].maxConsecutiveHigh, currentConsecutiveHigh);
                         annualData[lastYearProcessed][person].maxConsecutiveLow = Math.max(annualData[lastYearProcessed][person].maxConsecutiveLow, currentConsecutiveLow);
@@ -117,38 +256,27 @@ async function loadAndProcessData_ChartsView() {
                 }
                 lastYearProcessed = year;
 
-
-                // Semaines hautes
                 if (hours > HIGH_THRESHOLD_HOURS) {
-                    currentConsecutiveHigh++;
-                    currentConsecutiveLow = 0; // Rompt la série basse
-                } 
-                // Semaines basses
-                else if (hours > 0 && hours < LOW_THRESHOLD_HOURS) {
-                    currentConsecutiveLow++;
-                    currentConsecutiveHigh = 0; // Rompt la série haute
-                } 
-                // Semaines normales ou sans heures (rompt les deux types de séries)
-                else {
-                    currentConsecutiveHigh = 0;
-                    currentConsecutiveLow = 0;
+                    currentConsecutiveHigh++; currentConsecutiveLow = 0;
+                } else if (hours > 0 && hours < LOW_THRESHOLD_HOURS) {
+                    currentConsecutiveLow++; currentConsecutiveHigh = 0;
+                } else {
+                    currentConsecutiveHigh = 0; currentConsecutiveLow = 0;
                 }
                 if (annualData[year] && annualData[year][person]) {
                     annualData[year][person].maxConsecutiveHigh = Math.max(annualData[year][person].maxConsecutiveHigh, currentConsecutiveHigh);
                     annualData[year][person].maxConsecutiveLow = Math.max(annualData[year][person].maxConsecutiveLow, currentConsecutiveLow);
                 }
             }
-             // S'assurer que les max de la dernière année traitée pour cette personne sont bien stockés
             if (lastYearProcessed !== "" && annualData[lastYearProcessed] && annualData[lastYearProcessed][person]) {
                 annualData[lastYearProcessed][person].maxConsecutiveHigh = Math.max(annualData[lastYearProcessed][person].maxConsecutiveHigh, currentConsecutiveHigh);
                 annualData[lastYearProcessed][person].maxConsecutiveLow = Math.max(annualData[lastYearProcessed][person].maxConsecutiveLow, currentConsecutiveLow);
             }
         }
 
-
         if (Object.keys(annualData).length === 0) {
             setViewStatus(`Aucune donnée exploitable pour l'analyse annuelle.`);
-            showViewLoader(false);
+            showViewLoader(false); 
             return;
         }
 
@@ -157,68 +285,66 @@ async function loadAndProcessData_ChartsView() {
         for (const year of sortedYears) {
             const yearDataForDisplay = annualData[year];
             const personsInYear = Object.keys(yearDataForDisplay).sort();
-
             if (personsInYear.length === 0) continue;
 
-            const yearGroupDiv = document.createElement('div');
-            yearGroupDiv.className = 'annual-chart-group';
-            yearGroupDiv.innerHTML = `<h2>Année ${year}</h2>`;
-            chartsAnnualContainer.appendChild(yearGroupDiv);
+            const yearSectionElement = document.createElement('section');
+            yearSectionElement.className = 'annual-chart-group';
+            
+            const yearTitleElement = document.createElement('h2');
+            yearTitleElement.className = 'year-title';
+            yearTitleElement.textContent = `Analyse pour l'Année ${year}`;
+            yearSectionElement.appendChild(yearTitleElement);
+            
+            chartsAnnualContainer.appendChild(yearSectionElement); 
 
-            // --- Graphique 1: Détail par personne (semaines hautes/basses) ---
-            const detailChartContainer = document.createElement('div');
-            detailChartContainer.className = 'chart-container';
-            const detailCanvasId = `chart-${year}-details`;
-            detailChartContainer.innerHTML = `<canvas id="${detailCanvasId}"></canvas>`;
-            yearGroupDiv.appendChild(detailChartContainer);
+            const detailSection = createChartSubSection(
+                `chart-${year}-details`, 
+                "Totaux Semaines Hautes et Basses par Personne"
+            );
+            yearSectionElement.appendChild(detailSection.section);
             renderBarChart(
-                detailCanvasId,
-                personsInYear,
+                detailSection.canvasId, personsInYear,
                 [
-                    { label: `Semanas > ${HIGH_THRESHOLD_HOURS}h`, data: personsInYear.map(p => yearDataForDisplay[p].high), backgroundColor: 'rgba(255, 99, 132, 0.6)' },
-                    { label: `Semanas < ${LOW_THRESHOLD_HOURS}h (>0h)`, data: personsInYear.map(p => yearDataForDisplay[p].low), backgroundColor: 'rgba(54, 162, 235, 0.6)' }
+                    { label: `Semaine > ${HIGH_THRESHOLD_HOURS}h`, data: personsInYear.map(p => yearDataForDisplay[p].high), backgroundColor: 'rgba(255, 99, 132, 0.6)' },
+                    { label: `Semaine < ${LOW_THRESHOLD_HOURS}h (>0h)`, data: personsInYear.map(p => yearDataForDisplay[p].low), backgroundColor: 'rgba(54, 162, 235, 0.6)' }
                 ],
-                `Total Semaines Hautes/Basses - ${year}`
+                null 
             );
 
-            // --- Graphique 2: Plus longues séries consécutives hautes/basses par personne ---
-            const consecutiveChartContainer = document.createElement('div');
-            consecutiveChartContainer.className = 'chart-container';
-            const consecutiveCanvasId = `chart-${year}-consecutive`;
-            consecutiveChartContainer.innerHTML = `<canvas id="${consecutiveCanvasId}"></canvas>`;
-            yearGroupDiv.appendChild(consecutiveChartContainer);
+            const consecutiveSection = createChartSubSection(
+                `chart-${year}-consecutive`,
+                "Plus Longues Séries Consécutives (Hautes/Basses) par Personne"
+            );
+            yearSectionElement.appendChild(consecutiveSection.section);
             renderBarChart(
-                consecutiveCanvasId,
-                personsInYear,
+                consecutiveSection.canvasId, personsInYear,
                 [
-                    { label: `Max. Sem. Hautes Consécutives`, data: personsInYear.map(p => yearDataForDisplay[p].maxConsecutiveHigh), backgroundColor: 'rgba(255, 159, 64, 0.6)' }, // Orange
-                    { label: `Max. Sem. Basses Consécutives`, data: personsInYear.map(p => yearDataForDisplay[p].maxConsecutiveLow), backgroundColor: 'rgba(153, 102, 255, 0.6)' } // Violet
+                    { label: `Max. Sem. Hautes Consécutives`, data: personsInYear.map(p => yearDataForDisplay[p].maxConsecutiveHigh), backgroundColor: 'rgba(255, 159, 64, 0.6)' },
+                    { label: `Max. Sem. Basses Consécutives`, data: personsInYear.map(p => yearDataForDisplay[p].maxConsecutiveLow), backgroundColor: 'rgba(153, 102, 255, 0.6)' }
                 ],
-                `Max. Séries Consécutives Hautes/Basses - ${year}`
+                null
             );
 
-
-            // --- Graphique 3 (Optionnel): Taux de semaines hautes/basses pour l'année (Pie Chart) ---
-            let totalHighWeeksYear = 0, totalLowWeeksYear = 0, totalActiveWeeksYear = 0;
-            personsInYear.forEach(person => {
-                totalHighWeeksYear += yearDataForDisplay[person].high;
-                totalLowWeeksYear += yearDataForDisplay[person].low;
-                totalActiveWeeksYear += yearDataForDisplay[person].totalActiveWeeks;
+            let totalHigh = 0, totalLow = 0, totalActive = 0;
+            personsInYear.forEach(p => { 
+                totalHigh += yearDataForDisplay[p].high; 
+                totalLow += yearDataForDisplay[p].low; 
+                totalActive += yearDataForDisplay[p].totalActiveWeeks; 
             });
-            const totalNormalWeeksYear = totalActiveWeeksYear - totalHighWeeksYear - totalLowWeeksYear;
+            const totalNormal = totalActive - totalHigh - totalLow;
 
-            if (totalActiveWeeksYear > 0) {
-                const overallChartContainer = document.createElement('div');
-                overallChartContainer.className = 'chart-container';
-                overallChartContainer.style.height = "40vh";
-                const overallCanvasId = `chart-${year}-overall-pie`;
-                overallChartContainer.innerHTML = `<canvas id="${overallCanvasId}"></canvas>`;
-                yearGroupDiv.appendChild(overallChartContainer);
+            if (totalActive > 0) {
+                const overallPieSection = createChartSubSection(
+                    `chart-${year}-overall-pie`,
+                    `Répartition Globale des Semaines pour l'Année ${year}`
+                );
+                overallPieSection.chartContainer.style.height = "40vh";
+                yearSectionElement.appendChild(overallPieSection.section);
                 renderPieChart(
-                    overallCanvasId,
+                    overallPieSection.canvasId,
                     ['Semaines Hautes', 'Semaines Basses', 'Semaines Normales'],
-                    [totalHighWeeksYear, totalLowWeeksYear, totalNormalWeeksYear],
-                    `Répartition des Semaines - ${year} (Total)`
+                    [totalHigh, totalLow, totalNormal],
+                    null
                 );
             }
         }
@@ -232,9 +358,31 @@ async function loadAndProcessData_ChartsView() {
     }
 }
 
-function renderBarChart(canvasId, labels, datasetsConfig, title) {
+function createChartSubSection(canvasBaseId, sectionTitleText) {
+    const section = document.createElement('div');
+    section.className = 'chart-section';
+
+    const title = document.createElement('h3');
+    title.className = 'chart-section-title';
+    title.textContent = sectionTitleText;
+    section.appendChild(title);
+
+    const chartContainer = document.createElement('div');
+    chartContainer.className = 'chart-container';
+    const canvas = document.createElement('canvas');
+    canvas.id = canvasBaseId;
+    chartContainer.appendChild(canvas);
+    section.appendChild(chartContainer);
+
+    return { section, canvasId: canvasBaseId, chartContainer };
+}
+
+function renderBarChart(canvasId, labels, datasetsConfig, titleText) {
     const chartCanvas = document.getElementById(canvasId);
-    if (!chartCanvas) { console.error(`Canvas ${canvasId} non trouvé`); return; }
+    if (!chartCanvas) { 
+        console.error(`Canvas ${canvasId} non trouvé pour renderBarChart`); 
+        return; 
+    }
     
     const ctx = chartCanvas.getContext('2d');
     const newChart = new Chart(ctx, {
@@ -252,7 +400,7 @@ function renderBarChart(canvasId, labels, datasetsConfig, title) {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: {
-                title: { display: true, text: title, font: { size: 16 } },
+                title: { display: !!titleText, text: titleText || '', font: { size: 16 } },
                 legend: { position: 'top' },
                 tooltip: { mode: 'index', intersect: false }
             },
@@ -265,9 +413,12 @@ function renderBarChart(canvasId, labels, datasetsConfig, title) {
     activeChartInstances.push(newChart);
 }
 
-function renderPieChart(canvasId, labels, dataValues, title) {
+function renderPieChart(canvasId, labels, dataValues, titleText) {
     const chartCanvas = document.getElementById(canvasId);
-    if (!chartCanvas) { console.error(`Canvas ${canvasId} non trouvé`); return; }
+    if (!chartCanvas) { 
+        console.error(`Canvas ${canvasId} non trouvé pour renderPieChart`); 
+        return; 
+    }
 
     const ctx = chartCanvas.getContext('2d');
     const newChart = new Chart(ctx, {
@@ -293,7 +444,7 @@ function renderPieChart(canvasId, labels, dataValues, title) {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: {
-                title: { display: true, text: title, font: {size: 16}},
+                title: { display: !!titleText, text: titleText || '', font: {size: 16}},
                 legend: { position: 'top' },
                 tooltip: {
                     callbacks: {
