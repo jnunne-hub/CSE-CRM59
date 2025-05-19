@@ -1,208 +1,537 @@
-/* Styles Globaux */
-body {
-    font-family: sans-serif;
+/* style.css */
+
+/* --- Réinitialisation de base et Variables CSS --- */
+:root {
+    --primary-color: #4A90E2; /* Bleu doux */
+    --secondary-color: #50C878; /* Vert doux */
+    --danger-color: #E57373; /* Rouge doux */
+    --info-color: #78909C; /* Bleu-gris */
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #6c757d;
+    --text-color: #343a40;
+    --white-color: #ffffff;
+    --border-color: #dee2e6;
+    --font-family-sans-serif: 'Open Sans', 'Inter', 'Poppins', sans-serif; /* Open Sans en premier pour un style plus doux */
+    --box-shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+    --box-shadow-md: 0 .5rem 1rem rgba(0,0,0,.15);
+    --border-radius: .375rem; /* 6px */
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body {
+    font-family: var(--font-family-sans-serif);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--light-gray);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #f4f4f4;
-    color: #333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* style.css */
-
-/* ... (vos styles existants pour header, nav, etc.) ... */
-
+/* --- Structure de l'Application (Header, Main, Footer) --- */
 header {
-    background-color: #333;
-    color: white;
-    padding: 1em 0; /* Ajustez le padding global si nécessaire */
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* Supprimer le padding spécifique si vous voulez que le contenu s'étende */
+    background-color: var(--white-color);
+    color: var(--text-color);
+    padding: 1rem 0;
+    box-shadow: var(--box-shadow-sm);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky; /* Pour que le header reste en haut au défilement */
+    top: 0;
+    z-index: 1000;
 }
 
 .app-header-content {
     display: flex;
     align-items: center;
-    justify-content: center; /* Ou left, si vous préférez */
-    padding: 0 20px; /* Ajoute un peu d'espace sur les côtés */
-    margin-bottom: 0.5em; /* Espace entre le titre/icône et la nav */
+    justify-content: center;
+    padding: 0 20px;
+    margin-bottom: 0.75rem;
 }
 
 .header-icon {
-    width: 32px;  /* Taille de l'icône */
-    height: 32px; /* Taille de l'icône */
-    stroke: #ffffff; /* Couleur du trait de l'icône */
-    margin-right: 10px; /* Espace entre l'icône et le titre */
+    width: 36px;
+    height: 36px;
+    stroke: var(--primary-color);
+    margin-right: 12px;
 }
 
 .app-title {
-    font-size: 1.8em; /* Taille du titre */
-    color: #ffffff;   /* Couleur du titre */
-    margin: 0;        /* Supprime les marges par défaut du h1 */
-    font-weight: 600; /* Épaisseur de la police */
+    font-family: 'Poppins', sans-serif; /* Police plus distinctive pour le titre */
+    font-size: 1.75em;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+.app-title .brand-qvc { /* Si vous avez une sous-partie du titre */
+    font-weight: 400;
+    color: var(--info-color);
 }
 
-/* Ajustement pour la nav si elle est en dessous du titre/icône */
-nav {
-    margin-top: 10px; /* Espace si la nav est en dessous */
-}
 
-/* Styles pour la navigation (vous les avez probablement déjà) */
 nav ul {
     list-style-type: none;
-    padding: 0;
-    margin: 0;
     display: flex;
     justify-content: center;
 }
 
 nav ul li {
-    margin: 0 15px;
+    margin: 0 10px;
 }
 
 nav ul li a {
-    color: white;
+    color: var(--dark-gray);
     text-decoration: none;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 4px;
+    font-weight: 500; /* Medium weight */
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+}
+nav ul li a .feather {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
 }
 
-nav ul li a:hover, nav ul li a.active {
-    background-color: #555;
+nav ul li a:hover {
+    background-color: var(--medium-gray);
+    color: var(--primary-color);
 }
+
+nav ul li a.active {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+}
+nav ul li a.active .feather {
+    stroke: var(--white-color);
+}
+
 
 main {
-    flex-grow: 1; /* Fait en sorte que le main prenne l'espace disponible */
-    padding: 20px;
-    display: flex; /* Pour centrer le .container */
-    justify-content: center; /* Centre horizontalement */
-    align-items: flex-start; /* Aligne en haut */
+    flex-grow: 1;
+    padding: 25px; /* Plus d'espace */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
-#app-content .container { /* Styles pour les conteneurs de vue */
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+#app-content .container {
+    background-color: var(--white-color);
+    padding: 25px 30px; /* Plus de padding interne */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-md);
     width: 100%;
-    max-width: 900px; /* Ajustez selon le contenu le plus large */
-    margin: 0 auto; /* Centrage si main n'est pas flex */
+    max-width: 960px; /* Un peu plus large pour le contenu */
+    margin: 0 auto;
 }
-
 
 footer {
-    background-color: #333;
-    color: white;
+    background-color: var(--white-color);
+    color: var(--dark-gray);
     text-align: center;
-    padding: 1em 0;
+    padding: 1.5em 0;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9em;
+}
+
+/* --- Titres --- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
+    margin-bottom: 0.75em; /* Espace sous les titres */
+    line-height: 1.3;
+}
+h1 { font-size: 2em; text-align: center; color: var(--primary-color); margin-bottom: 1.2em;} /* Titre de page */
+h2 { font-size: 1.5em; color: var(--text-color); margin-bottom: 1em; text-align: left; } /* Titres de section dans le contenu */
+h3 { font-size: 1.25em; color: var(--text-color); text-align: left;}
+
+
+/* --- Formulaires et Boutons --- */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+.form-control {
+    display: block;
     width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: var(--white-color);
+    background-clip: padding-box;
+    border: 1px solid var(--border-color);
+    appearance: none;
+    border-radius: var(--border-radius);
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
+.form-control:focus {
+    color: var(--text-color);
+    background-color: var(--white-color);
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(var(--primary-color-rgb, 74, 144, 226),.25); /* Utiliser var(--primary-color-rgb) si défini */
+}
+/* Ajouter une variable RGB pour le box-shadow de focus */
+:root { --primary-color-rgb: 74, 144, 226; }
 
-/* Styles pour les éléments des vues (adaptés des pages originales) */
-h1, h2 { color: #333; text-align: center; }
-input[type="file"] { display: block; margin: 20px auto; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-button, .controls select {
-    padding: 10px 15px; /* Un peu plus uniforme */
-    color: white;
-    border: none;
-    border-radius: 4px;
+
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 12px;
+}
+input[type="file"] {
+    margin: 10px 0; /* Ajusté pour être utilisé dans .form-group */
+}
+input[type="file"].form-control { padding: 0.5rem 0.75rem; /* Un peu moins de padding pour input file */ }
+
+
+button, .btn { /* Style de base pour tous les boutons */
+    display: inline-flex; /* Pour aligner icônes et texte */
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family-sans-serif);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid transparent;
     cursor: pointer;
-    font-size: 16px;
-    margin: 10px 5px;
-}
-/* Styles spécifiques pour les boutons des vues */
-#calculateButton { background-color: #5cb85c; }
-#calculateButton:hover { background-color: #4cae4c; }
-#exportCsvButton { background-color: #007bff; }
-#exportCsvButton:hover { background-color: #0056b3; }
-#saveFirebaseButton { background-color: #ffc107; color: #212529; }
-#saveFirebaseButton:hover { background-color: #e0a800; }
-.controls button { background-color: #007bff; } /* Boutons de dashboard/charts */
-.controls button:hover { background-color: #0056b3; }
-.controls label { margin-right: 10px; }
-.controls select { color: #333; border: 1px solid #ccc; }
-
-
-.button-container, .controls { text-align: center; margin-bottom: 20px; }
-#results { margin-top: 20px; padding: 10px; background-color: #e9e9e9; border-radius: 4px; }
-#results h2 { margin-top: 0; }
-#results pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; max-height: 300px; overflow-y: auto;}
-
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-th { background-color: #f0f0f0; }
-tr:nth-child(even) { background-color: #f9f9f9; }
-
-.chart-container {
-    position: relative; margin: auto; height: 60vh; width: 80vw; max-width: 800px;
-}
-.loader {
-    border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%;
-    width: 30px; height: 30px; animation: spin 1s linear infinite;
-    margin: 20px auto; display: none; /* Sera géré par JS */
-}
-/* Dans style.css */
-.annual-chart-group {
-    margin-bottom: 40px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
-}
-.annual-chart-group h2 {
+    transition: all 0.2s ease-in-out;
     text-align: center;
-    margin-bottom: 20px;
-    color: #444;
+    text-decoration: none;
+    white-space: nowrap;
+    margin: 5px;
 }
-/* style.css */
-
-/* ... (styles existants) ... */
-
-.annual-chart-group {
-    margin-bottom: 40px;
-    padding: 20px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #fdfdfd;
+button .feather, .btn .feather {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
 }
 
-.year-title { /* Titre de l'année */
-    text-align: center;
-    margin-bottom: 30px;
-    color: #2c3e50; /* Bleu foncé */
-    font-size: 1.8em;
-    border-bottom: 2px solid #3498db; /* Soulignement bleu */
-    padding-bottom: 10px;
+/* Styles spécifiques pour les boutons de vues */
+#calculateButton, #saveFirebaseButton, .controls button, #refreshPersonsListButton { /* Boutons primaires par défaut */
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border-color: var(--primary-color);
+}
+#calculateButton:hover, #saveFirebaseButton:hover, .controls button:hover, #refreshPersonsListButton:hover {
+    background-color: #3a7bc8; /* Bleu un peu plus foncé */
+    border-color: #3a7bc8;
 }
 
-.chart-section {
-    margin-bottom: 30px;
+/* Bouton Secondaire (exemple: export) */
+#exportCsvButton, button.btn-outline {
+    background-color: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+#exportCsvButton:hover, button.btn-outline:hover {
+    background-color: var(--primary-color);
+    color: var(--white-color);
 }
 
-.chart-section-title { /* Titre pour chaque type de graphique */
-    text-align: left;
-    font-size: 1.3em;
-    color: #34495e; /* Bleu-gris */
-    margin-bottom: 15px;
-    padding-left: 10px;
-    border-left: 4px solid #3498db; /* Marge gauche bleue */
+/* Bouton Danger (exemple: supprimer) */
+#saveFirebaseButton { /* Changement de rôle: avant jaune, maintenant peut-être "info" ou garder un jaune doux */
+    background-color: #FFCA28; /* Jaune ambré doux */
+    color: var(--text-color);
+    border-color: #FFCA28;
+}
+#saveFirebaseButton:hover {
+    background-color: #FFB300; /* Jaune plus foncé */
+    border-color: #FFB300;
 }
 
-/* Pour que les boutons de contrôle soient en bas et potentiellement fixes */
-.chart-controls-fixed {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #ddd;
-    text-align: center;
+.delete-button { /* Pour la page de gestion des personnes */
+    background-color: var(--danger-color);
+    color: var(--white-color);
+    border-color: var(--danger-color);
 }
-#exportChartsToPdfButton {
-    background-color: #e74c3c; /* Rouge pour PDF */
+.delete-button:hover {
+    background-color: #D32F2F; /* Rouge plus foncé */
+    border-color: #D32F2F;
+}
+
+#exportChartsToPdfButton { /* Existant */
+    background-color: var(--info-color); 
+    color: var(--white-color);
+    border-color: var(--info-color);
 }
 #exportChartsToPdfButton:hover {
-    background-color: #c0392b;
+    background-color: #546E7A; /* Bleu-gris plus foncé */
+    border-color: #546E7A;
 }
-/* .chart-container est déjà défini */
+
+
+.button-container, .controls {
+    text-align: center;
+    margin-bottom: 25px; /* Plus d'espace */
+    display: flex; /* Pour un meilleur alignement si plusieurs boutons/contrôles */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+.controls label { margin-right: 8px; align-self: center; }
+.controls select { padding: 0.7rem 1rem; color: var(--text-color); border: 1px solid var(--border-color); border-radius: var(--border-radius);}
+
+/* --- Résultat Upload & Tableaux --- */
+#results {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: var(--light-gray); /* Fond plus clair pour distinction */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+#results h2 { font-size: 1.3em; margin-bottom: 0.75em; color: var(--primary-color); text-align: left; }
+#results pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Police mono plus agréable */
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: var(--white-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--medium-gray);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    font-size: 0.95em; /* Un peu plus petit pour les tableaux denses */
+}
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 12px 15px; /* Plus de padding */
+    text-align: left;
+    vertical-align: middle;
+}
+th {
+    background-color: var(--medium-gray); /* Fond plus clair pour l'en-tête */
+    font-weight: 600; /* Texte en-tête plus gras */
+    color: var(--text-color);
+}
+tr:nth-child(even) td { /* Ligne paire (sauf si en-tête) */
+    background-color: var(--light-gray);
+}
+tr:hover td {
+    background-color: #e2e6ea; /* Effet de survol doux */
+}
+
+
+/* --- Éléments Spécifiques aux Vues (Graphiques, Modals) --- */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 50vh; /* Ajusté */
+    width: 100%; /* Prendra la largeur du conteneur parent */
+    max-width: 750px; /* Max width pour les graphiques */
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--white-color); /* Fond blanc pour le graphique */
+}
+
+.annual-chart-group { /* Titre au-dessus du graphique */
+    margin-bottom: 35px;
+    padding-bottom: 20px;
+    /* border-bottom: 1px solid var(--medium-gray); */ /* Optionnel */
+}
+.year-title {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--primary-color);
+    font-size: 1.6em;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+.chart-section { margin-bottom: 30px; }
+.chart-section-title {
+    font-size: 1.2em;
+    color: var(--dark-gray); /* Un gris pour les sous-titres de graphique */
+    margin-bottom: 15px;
+    padding-left: 0; /* Plus de padding avec bordure */
+    border-left: none;
+    font-weight: 500;
+}
+.chart-controls-fixed { /* existant */
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- Loader et Messages de Statut --- */
+.loader {
+    border: 4px solid var(--medium-gray); /* Bordure plus fine */
+    border-top: 4px solid var(--primary-color); /* Couleur primaire pour l'animation */
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    animation: spin 0.8s linear infinite; /* Animation un peu plus rapide */
+    margin: 25px auto;
+    display: none;
+}
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#statusMessage, #firebaseStatus { font-size: 0.9em; text-align: center; margin-top: 10px; }
+
+#statusMessage, #firebaseStatus {
+    font-size: 0.95em;
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: var(--border-radius);
+}
+#statusMessage:empty, #firebaseStatus:empty { display: none; } /* Masquer si vide */
+/* Style conditionnel pour les messages (à ajouter via JS si besoin: .success, .error) */
+#statusMessage.success, #firebaseStatus.success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+#statusMessage.error, #firebaseStatus.error { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7;}
+
+
+/* Warning text (pour gestion des personnes) */
+.warning-text {
+    color: var(--danger-color) !important; /* Override d'autres styles de p */
+    background-color: #fdecea;
+    border: 1px solid var(--danger-color);
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Overlay pour spinner PDF (vous l'avez fourni) */
+.pdf-spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Au-dessus de tout */
+}
+.pdf-spinner { /* Réutilise l'animation .loader mais peut être stylé différemment */
+    border: 5px solid var(--medium-gray);
+    border-top: 5px solid var(--secondary-color); /* Vert pour le spinner PDF */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+.pdf-spinner-overlay p {
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.dashboard-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Espace entre les groupes de filtres */
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: var(--light-gray);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espace entre label et select/input */
+}
+
+.filter-group label {
+    font-weight: 500;
+    white-space: nowrap; /* Empêche le label de passer à la ligne */
+}
+
+.filter-group select,
+.filter-group input[type="text"] {
+    padding: 0.5rem 0.75rem; /* Padding plus petit pour les contrôles de filtre */
+    font-size: 0.9rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--white-color);
+}
+.filter-group input[type="text"] {
+    min-width: 200px; /* Largeur minimale pour le champ de recherche */
+}
+
+
+/* Style pour les en-têtes de colonnes triables */
+#hoursTableDashboard th {
+    cursor: pointer;
+    position: relative; /* Pour le positionnement de la flèche */
+    user-select: none; /* Empêcher la sélection de texte sur clic */
+}
+
+#hoursTableDashboard th:hover {
+    background-color: #dcdcdc; /* Un gris légèrement plus foncé au survol */
+}
+
+.sort-arrow {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 5px;
+    vertical-align: middle;
+    opacity: 0.4; /* Flèche discrète par défaut */
+}
+
+#hoursTableDashboard th.sorted-asc .sort-arrow {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid var(--text-color); /* Flèche vers le haut */
+    opacity: 1;
+}
+
+#hoursTableDashboard th.sorted-desc .sort-arrow {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--text-color); /* Flèche vers le bas */
+    opacity: 1;
+}
+
+/* Pagination (optionnel, mais utile pour de grandes listes) */
+.pagination-controls {
+    text-align: center;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.pagination-controls button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 8px 12px;
+}
+.pagination-controls button:disabled {
+    background-color: var(--medium-gray);
+    color: var(--dark-gray);
+    cursor: not-allowed;
+}
+.pagination-controls #pageInfo {
+    font-weight: 500;
+}
