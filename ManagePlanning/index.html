@@ -19,32 +19,31 @@
     <!-- jsPDF et html2canvas pour l'export PDF des graphiques -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
 </head>
 <body>
 <header>
-        <div class="app-header-content">
-            <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <!-- Exemple d'icône simple (vous pouvez remplacer par la vôtre) -->
-                <!-- Par exemple, une icône de graphique / planning -->
-                <path d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                <path d="M14 2v4h-4V2"></path>
-                <path d="M7 10h5"></path>
-                <path d="M7 14h3"></path>
-                <path d="M4 20v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7"></path>
-                <path d="M18 12h.01"></path>
-                <path d="M12 12h.01"></path>
-            </svg>
-            <h1 class="app-title">Planning Dashboard</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="#upload">Upload PDF</a></li>
-                <li><a href="#dashboard">Tableau de Bord</a></li>
-                <li><a href="#charts">Graphiques</a></li>
-                <li><a href="#manage-persons">Gestion Personnes</a></li>
-            </ul>
-        </nav>
-    </header>
+    <div class="app-header-content">
+        <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <path d="M14 2v4h-4V2"></path>
+            <path d="M7 10h5"></path><path d="M7 14h3"></path>
+            <path d="M4 20v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7"></path>
+            <path d="M18 12h.01"></path><path d="M12 12h.01"></path>
+        </svg>
+        <h1 class="app-title">Mon Super Tableau de Bord</h1> <!-- Ou Tableau de Bord QVCT -->
+    </div>
+    <nav>
+        <ul>
+            <li><a href="#upload"><i data-feather="upload-cloud"></i>Upload PDF</a></li>
+            <li><a href="#dashboard"><i data-feather="layout"></i>Tableau de Bord</a></li>
+            <li><a href="#charts"><i data-feather="bar-chart-2"></i>Graphiques</a></li>
+            <li><a href="#manage-persons"><i data-feather="users"></i>Gestion Personnes</a></li>
+        </ul>
+    </nav>
+</header>
 
     <main>
         <div id="app-content">
@@ -76,30 +75,60 @@
     </template>
 
     <template id="template-dashboard">
-        <div class="container">
-            <h1>Tableau de Bord des Heures de Travail</h1>
-            <div class="controls">
-                <label for="personFilter">Filtrer par personne:</label>
-                <select id="personFilter">
-                    <option value="">Toutes les personnes</option>
+    <div class="container">
+        <h1>Tableau de Bord des Heures de Travail</h1>
+        
+        <div class="dashboard-controls">
+            <div class="filter-group">
+                <label for="personFilterDashboard">Personne:</label>
+                <select id="personFilterDashboard">
+                    <option value="">Toutes</option>
                 </select>
-                <button id="refreshButtonDashboard">Rafraîchir les Données</button>
             </div>
-            <div class="loader" id="view-loader"></div>
-            <div id="statusMessage"></div>
-            <table id="hoursTable">
-                <thead>
-                    <tr>
-                        <th>Personne</th>
-                        <th>Semaine</th>
-                        <th>Heures Travaillées</th>
-                        <th>Date d'Enregistrement</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+            <div class="filter-group">
+                <label for="yearFilterDashboard">Année:</label>
+                <select id="yearFilterDashboard">
+                    <option value="">Toutes</option>
+                    {/* Les années seront peuplées dynamiquement */}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="monthFilterDashboard">Mois:</label>
+                <select id="monthFilterDashboard">
+                    <option value="">Tous</option>
+                    {/* Les mois (01-12) */}
+                </select>
+            </div>
+            <div class="filter-group search-filter-group">
+                <label for="searchFilterDashboard">Rechercher:</label>
+                <input type="text" id="searchFilterDashboard" placeholder="Filtrer le tableau...">
+            </div>
+            <div class="filter-group">
+                <button id="refreshButtonDashboard" class="btn"><i data-feather="refresh-cw"></i> Rafraîchir</button>
+            </div>
         </div>
-    </template>
+
+        <div class="loader" id="view-loader"></div>
+        <div id="statusMessage"></div>
+
+        <table id="hoursTableDashboard">
+            <thead>
+                <tr>
+                    <th data-sort-key="personne">Personne <span class="sort-arrow"></span></th>
+                    <th data-sort-key="semaine">Semaine <span class="sort-arrow"></span></th>
+                    <th data-sort-key="heures">Heures Travaillées <span class="sort-arrow"></span></th>
+                    <th data-sort-key="dateEnregistrement">Date d'Enregistrement <span class="sort-arrow"></span></th>
+                </tr>
+            </thead>
+            <tbody id="tableBodyDashboard"></tbody>
+        </table>
+        <div id="dashboardPaginationControls" class="pagination-controls" style="display: none;">
+            <button id="prevPageBtn" disabled>< Précédent</button>
+            <span id="pageInfo">Page 1 sur 1</span>
+            <button id="nextPageBtn" disabled>Suivant ></button>
+        </div>
+    </div>
+</template>
 
 <template id="template-charts">
     <div class="container">
@@ -173,5 +202,6 @@
     
     <!-- Script principal de la SPA -->
     <script src="script.js" type="module"></script>
+
 </body>
 </html>
