@@ -6,7 +6,6 @@ let filteredAndSortedData = []; // Pour les données après filtrage et tri
 let currentSortKey = null;
 let currentSortDirection = 'asc'; // 'asc' ou 'desc'
 
-// Pour la pagination (optionnel mais recommandé pour de grands ensembles de données)
 const ITEMS_PER_PAGE = 15;
 let currentPage = 1;
 
@@ -15,7 +14,6 @@ const MONTH_NAMES_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "
 export function initDashboardView() {
     console.log("Initialisation de la vue Dashboard");
 
-    // Sélecteurs DOM
     const refreshButton = document.getElementById('refreshButtonDashboard');
     const personFilterSelect = document.getElementById('personFilterDashboard');
     const yearFilterSelect = document.getElementById('yearFilterDashboard');
@@ -24,14 +22,14 @@ export function initDashboardView() {
     const tableHeaders = document.querySelectorAll('#hoursTableDashboard th[data-sort-key]');
     const prevPageBtn = document.getElementById('prevPageBtn');
     const nextPageBtn = document.getElementById('nextPageBtn');
+    const exportPdfButton = document.getElementById('exportPdfButtonDashboard'); // NOUVEAU
 
-
-    // Écouteurs d'événements
     if (refreshButton) refreshButton.addEventListener('click', fetchDataFromFirestore);
     if (personFilterSelect) personFilterSelect.addEventListener('change', applyFiltersAndRender);
     if (yearFilterSelect) yearFilterSelect.addEventListener('change', applyFiltersAndRender);
     if (monthFilterSelect) monthFilterSelect.addEventListener('change', applyFiltersAndRender);
-    if (searchInput) searchInput.addEventListener('input', debounce(applyFiltersAndRender, 300)); // Debounce pour la performance
+    if (searchInput) searchInput.addEventListener('input', debounce(applyFiltersAndRender, 300));
+    if (exportPdfButton) exportPdfButton.addEventListener('click', exportDashboardToPdf_DashboardView); // NOUVEAU
 
     tableHeaders.forEach(th => {
         th.addEventListener('click', () => {
@@ -42,7 +40,7 @@ export function initDashboardView() {
                 currentSortKey = sortKey;
                 currentSortDirection = 'asc';
             }
-            applyFiltersAndRender(); // Retrier et réafficher
+            applyFiltersAndRender();
             updateSortArrows(tableHeaders);
         });
     });
@@ -61,25 +59,31 @@ export function initDashboardView() {
         }
     });
     
+    // Vérifier si jspdf et autotable sont chargés pour le bouton PDF
+    if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
+        console.warn("jsPDF ou jspdf-autotable non chargé. Export PDF du dashboard désactivé.");
+        if(exportPdfButton) exportPdfButton.disabled = true;
+    } else {
+         if(exportPdfButton) exportPdfButton.disabled = false;
+    }
 
     populateMonthFilter();
-    fetchDataFromFirestore(); // Charger les données initiales
+    fetchDataFromFirestore();
 }
 
 function populateMonthFilter() {
     const monthFilterSelect = document.getElementById('monthFilterDashboard');
     if(!monthFilterSelect) return;
-    monthFilterSelect.innerHTML = '<option value="">Tous</option>'; // Garder l'option "Tous"
+    monthFilterSelect.innerHTML = '<option value="">Tous</option>'; 
     for (let i = 0; i < 12; i++) {
         const option = document.createElement('option');
-        const monthValue = String(i + 1).padStart(2, '0'); // 01, 02, ... 12
+        const monthValue = String(i + 1).padStart(2, '0'); 
         option.value = monthValue;
         option.textContent = MONTH_NAMES_FR[i];
         monthFilterSelect.appendChild(option);
     }
 }
 
-// Debounce function pour éviter trop d'appels sur 'input'
 function debounce(func, delay) {
     let timeout;
     return function(...args) {
@@ -98,9 +102,9 @@ async function fetchDataFromFirestore() {
         const querySnapshot = await db.collection("heuresTravail").orderBy("dateEnregistrement", "desc").get();
         allRawData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        populateStaticFilters(); // Peupler les filtres personne et année
-        applyFiltersAndRender(); // Appliquer les filtres par défaut et afficher
-        setViewStatus(`Total de ${allRawData.length} entrée(s) chargées.`, "success");
+        populateStaticFilters();
+        applyFiltersAndRender();
+        setViewStatus(`Total de ${allRawData.length} entrée(s) chargées.`);
         if (allRawData.length === 0) {
             setViewStatus('Aucune donnée trouvée dans Firestore.');
         }
@@ -108,7 +112,7 @@ async function fetchDataFromFirestore() {
     } catch (error) {
         console.error("Erreur Firebase (DashboardView - fetchData):", error);
         setViewStatus(`Erreur: ${error.message}`, "error");
-        allRawData = []; // Assurer que c'est vide en cas d'erreur
+        allRawData = []; 
         applyFiltersAndRender();
     } finally {
         showViewLoader(false);
@@ -128,13 +132,12 @@ function populateStaticFilters() {
         if (item.personne) persons.add(item.personne);
         if (item.semaine) {
             const year = item.semaine.substring(0, 4);
-            if (year.match(/^\d{4}$/)) { // S'assurer que c'est bien une année
+            if (year.match(/^\d{4}$/)) {
                  years.add(year);
             }
         }
     });
 
-    // Garder les valeurs actuelles des filtres si elles existent
     const currentPerson = personFilterSelect.value;
     const currentYear = yearFilterSelect.value;
 
@@ -148,7 +151,7 @@ function populateStaticFilters() {
 
 
     yearFilterSelect.innerHTML = '<option value="">Toutes</option>';
-    Array.from(years).sort((a,b) => b-a).forEach(year => { // Trier les années, plus récentes en premier
+    Array.from(years).sort((a,b) => b-a).forEach(year => {
         const option = document.createElement('option');
         option.value = year; option.textContent = year;
         yearFilterSelect.appendChild(option);
@@ -160,7 +163,7 @@ function populateStaticFilters() {
 function applyFiltersAndRender() {
     const personFilter = document.getElementById('personFilterDashboard')?.value || "";
     const yearFilter = document.getElementById('yearFilterDashboard')?.value || "";
-    const monthFilter = document.getElementById('monthFilterDashboard')?.value || ""; // ex: "01", "02", ..., "12"
+    const monthFilter = document.getElementById('monthFilterDashboard')?.value || "";
     const searchTerm = document.getElementById('searchFilterDashboard')?.value.toLowerCase() || "";
 
     filteredAndSortedData = allRawData.filter(item => {
@@ -176,58 +179,57 @@ function applyFiltersAndRender() {
             matchesYear = item.semaine.startsWith(yearFilter + "-W");
         }
         if (monthFilter && item.semaine && item.semaine.includes("-W")) {
-            // Extrait l'année et le numéro de semaine
             const [itemYear, weekNumStr] = item.semaine.split('-W');
             const weekNum = parseInt(weekNumStr);
-            if (!isNaN(weekNum)) {
-                // Calculer le mois approximatif de la semaine
+            if (!isNaN(weekNum) && itemYear.match(/^\d{4}$/)) {
                 const firstDayOfYear = new Date(parseInt(itemYear), 0, 1);
-                const firstDayOfWeek = new Date(firstDayOfYear.valueOf() + (weekNum - 1) * 7 * 24 * 60 * 60 * 1000);
-                // Il est plus simple de comparer avec une date du milieu de la semaine pour la plupart des cas
-                const middleDayOfWeek = new Date(firstDayOfWeek.valueOf() + 3 * 24 * 60 * 60 * 1000); 
-                const itemMonth = String(middleDayOfWeek.getMonth() + 1).padStart(2, '0');
+                // Utiliser le 4ème jour de la semaine pour être plus robuste au passage de mois
+                const dateInWeek = new Date(firstDayOfYear.valueOf() + (weekNum - 1) * 7 * 24 * 60 * 60 * 1000 + 3 * 24 * 60 * 60 * 1000);
+                const itemMonth = String(dateInWeek.getMonth() + 1).padStart(2, '0');
                 matchesMonth = itemMonth === monthFilter;
             } else {
                 matchesMonth = false;
             }
         }
 
-
         if (searchTerm) {
             matchesSearch = (
                 item.personne?.toLowerCase().includes(searchTerm) ||
                 item.semaine?.toLowerCase().includes(searchTerm) ||
                 (item.heures?.toString() || "").includes(searchTerm) ||
-                (item.dateEnregistrement?.toDate().toLocaleString('fr-FR') || "").toLowerCase().includes(searchTerm)
+                (item.dateEnregistrement?.toDate ? item.dateEnregistrement.toDate().toLocaleString('fr-FR') : "").toLowerCase().includes(searchTerm)
             );
         }
         return matchesPerson && matchesYear && matchesMonth && matchesSearch;
     });
 
-    // Tri
     if (currentSortKey) {
         filteredAndSortedData.sort((a, b) => {
             let valA = a[currentSortKey];
             let valB = b[currentSortKey];
 
-            // Traitement spécifique pour certains types de données
             if (currentSortKey === 'heures') {
                 valA = parseFloat(valA) || 0;
                 valB = parseFloat(valB) || 0;
             } else if (currentSortKey === 'dateEnregistrement') {
                 valA = valA?.toDate ? valA.toDate().getTime() : 0;
                 valB = valB?.toDate ? valB.toDate().getTime() : 0;
-            } else if (typeof valA === 'string') {
+            } else if (typeof valA === 'string' && typeof valB === 'string') { // S'assurer que les deux sont des chaînes
                 valA = valA.toLowerCase();
                 valB = valB.toLowerCase();
+            } else if (valA === null || typeof valA === 'undefined') { // Gérer les nuls en les plaçant à la fin (ou au début)
+                return currentSortDirection === 'asc' ? 1 : -1;
+            } else if (valB === null || typeof valB === 'undefined') {
+                return currentSortDirection === 'asc' ? -1 : 1;
             }
+
 
             if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
             if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
             return 0;
         });
     }
-    currentPage = 1; // Revenir à la première page après un filtre ou un tri
+    currentPage = 1; 
     renderTable();
 }
 
@@ -248,16 +250,16 @@ function renderTable() {
     const nextPageBtn = document.getElementById('nextPageBtn');
 
     if (!tableBody || !paginationControlsDiv || !pageInfoSpan || !prevPageBtn || !nextPageBtn) {
-        console.error("Éléments DOM pour le tableau ou la pagination manquants.");
+        console.error("Éléments DOM pour le tableau ou la pagination manquants (Dashboard).");
         return;
     }
 
-    tableBody.innerHTML = ''; // Vider le tableau
+    tableBody.innerHTML = ''; 
 
     if (filteredAndSortedData.length === 0) {
         const row = tableBody.insertRow();
         const cell = row.insertCell();
-        cell.colSpan = 4; // Nombre de colonnes
+        cell.colSpan = 4; 
         cell.textContent = 'Aucune donnée ne correspond à vos filtres.';
         cell.style.textAlign = 'center';
         paginationControlsDiv.style.display = 'none';
@@ -268,10 +270,8 @@ function renderTable() {
     const totalItems = filteredAndSortedData.length;
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     
-    // S'assurer que currentPage est valide
     if (currentPage < 1) currentPage = 1;
     if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -281,7 +281,7 @@ function renderTable() {
         const row = tableBody.insertRow();
         row.insertCell().textContent = data.personne || 'N/A';
         row.insertCell().textContent = data.semaine || 'N/A';
-        row.insertCell().textContent = data.heures != null ? data.heures.toFixed(2) : 'N/A'; // Vérifier null/undefined
+        row.insertCell().textContent = data.heures != null ? data.heures.toFixed(2) : 'N/A'; 
         
         let dateEnregistrementText = 'N/A';
         if (data.dateEnregistrement && data.dateEnregistrement.toDate) {
@@ -290,11 +290,101 @@ function renderTable() {
         row.insertCell().textContent = dateEnregistrementText;
     });
 
-    // Mettre à jour les infos de pagination
     pageInfoSpan.textContent = `Page ${totalPages > 0 ? currentPage : 0} sur ${totalPages}`;
     prevPageBtn.disabled = currentPage <= 1;
     nextPageBtn.disabled = currentPage >= totalPages;
+    paginationControlsDiv.style.display = totalPages > 1 ? 'flex' : 'none';
+}
 
-    // Afficher/masquer les contrôles si une seule page
-     paginationControlsDiv.style.display = totalPages > 1 ? 'flex' : 'none';
+// NOUVELLE FONCTION D'EXPORT PDF POUR LE DASHBOARD
+async function exportDashboardToPdf_DashboardView() {
+    const exportButton = document.getElementById('exportPdfButtonDashboard');
+    if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+        setViewStatus("La librairie jsPDF n'est pas chargée.", "error");
+        if (exportButton) exportButton.disabled = true; // Désactiver si la lib manque
+        return;
+    }
+    if (typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
+        setViewStatus("La librairie jspdf-autotable n'est pas chargée (nécessaire pour l'export tableau).", "error");
+        if (exportButton) exportButton.disabled = true;
+        return;
+    }
+
+    if (filteredAndSortedData.length === 0) {
+        setViewStatus("Aucune donnée à exporter en PDF.", "info");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' }); // 'l' pour landscape, mieux pour les tableaux larges
+
+    showViewLoader(true);
+    setViewStatus("Génération du PDF du tableau de bord...", "info");
+    if (exportButton) exportButton.disabled = true;
+
+    try {
+        const tableTitle = "Tableau de Bord des Heures de Travail";
+        const pageMargin = 15;
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(18);
+        doc.text(tableTitle, pageWidth / 2, pageMargin, { align: 'center' });
+        
+        // Informations sur les filtres actifs
+        let filterInfo = "Filtres actifs : ";
+        const personFilter = document.getElementById('personFilterDashboard')?.value;
+        const yearFilter = document.getElementById('yearFilterDashboard')?.value;
+        const monthFilter = document.getElementById('monthFilterDashboard')?.value;
+        const searchTerm = document.getElementById('searchFilterDashboard')?.value;
+
+        if (personFilter) filterInfo += `Personne: ${personFilter}; `;
+        if (yearFilter) filterInfo += `Année: ${yearFilter}; `;
+        if (monthFilter) {
+            const monthName = MONTH_NAMES_FR[parseInt(monthFilter) -1];
+            filterInfo += `Mois: ${monthName}; `;
+        }
+        if (searchTerm) filterInfo += `Recherche: "${searchTerm}"; `;
+        if (filterInfo === "Filtres actifs : ") filterInfo += "Aucun";
+
+        doc.setFontSize(9);
+        doc.text(filterInfo, pageMargin, pageMargin + 10);
+
+        // Extraire les données pour autoTable
+        // Important: Exporter TOUTES les données filtrées, pas seulement la page actuelle
+        const head = [['Personne', 'Semaine', 'Heures Travaillées', 'Date d\'Enregistrement']];
+        const body = filteredAndSortedData.map(item => [
+            item.personne || 'N/A',
+            item.semaine || 'N/A',
+            item.heures != null ? item.heures.toFixed(2) : 'N/A',
+            item.dateEnregistrement?.toDate ? item.dateEnregistrement.toDate().toLocaleString('fr-FR', {dateStyle:'short', timeStyle:'short'}) : 'N/A'
+        ]);
+
+        doc.autoTable({
+            head: head,
+            body: body,
+            startY: pageMargin + 15, // Après le titre et les filtres
+            theme: 'striped', // ou 'grid', 'plain'
+            headStyles: { fillColor: [41, 128, 185] }, // Un bleu pour l'en-tête
+            styles: { fontSize: 8, cellPadding: 1.5 },
+            columnStyles: {
+                2: { halign: 'right' }, // Aligner les heures à droite
+            },
+            didDrawPage: function (data) {
+                // Ajout d'un pied de page si nécessaire
+                // doc.setFontSize(8);
+                // doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.getHeight() - 10);
+            }
+        });
+
+        const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        doc.save(`dashboard_heures_${date}.pdf`);
+        setViewStatus("PDF du tableau de bord généré avec succès.", "success");
+
+    } catch (error) {
+        console.error("Erreur lors de la génération du PDF du dashboard:", error);
+        setViewStatus(`Erreur PDF: ${error.message}`, "error");
+    } finally {
+        showViewLoader(false);
+        if (exportButton) exportButton.disabled = false;
+    }
 }
