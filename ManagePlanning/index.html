@@ -132,43 +132,43 @@
 
 <template id="template-charts">
     <div class="container">
-        <div id="charts-exportable-content">
+        <div id="charts-exportable-content"> 
             <h1>Analyse Détaillée des Heures de Travail</h1>
+
+            <!-- NOUVELLE SECTION POUR LE TABLEAU RÉCAPITULATIF -->
+            <section class="summary-table-section">
+                <h2 class="summary-table-title">Synthèse Annuelle par Personne (Semaines Hautes / Basses)</h2>
+                <div id="chartsSummaryTableContainer" class="table-responsive-container">
+                    {/* Exemple de structure:
+                    <table id="summaryAnnualHoursTable">
+                        <thead>
+                            <tr>
+                                <th>Personne</th>
+                                <th>2025 (H/B)</th>
+                                <th>2024 (H/B)</th>
+                                ...
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Nom Personne</td>
+                                <td>5 / 10</td>
+                                <td>3 / 12</td>
+                                ...
+                            </tr>
+                        </tbody>
+                    </table>
+                    */}
+                </div>
+            </section>
             
             <div id="charts-annual-summary-container">
-                <!-- Les graphiques annuels seront injectés ici -->
-                <!-- Structure modifiée pour les groupes annuels :
-                <section class="annual-chart-group">
-                    <h2 class="year-title">Analyse pour l'Année YYYY</h2>
-                    
-                    <div class="chart-section">
-                        <h3 class="chart-section-title">Totaux Semaines Hautes et Basses</h3>
-                        <div class="chart-container">
-                            <canvas id="chart-YYYY-details"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-section">
-                        <h3 class="chart-section-title">Plus Longues Séries Consécutives</h3>
-                        <div class="chart-container">
-                            <canvas id="chart-YYYY-consecutive"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-section">
-                        <h3 class="chart-section-title">Répartition Globale des Semaines</h3>
-                        <div class="chart-container" style="height: 40vh;">
-                            <canvas id="chart-YYYY-overall-pie"></canvas>
-                        </div>
-                    </div>
-                </section>
-                -->
             </div>
         </div>
 
         <div class="controls chart-controls-fixed">
-            <button id="refreshButtonChart">Rafraîchir les Graphiques</button>
-            <button id="exportChartsToPdfButton">Exporter en PDF</button>
+            <button id="refreshButtonChart"><i data-feather="refresh-cw"></i> Rafraîchir</button>
+            <button id="exportChartsToPdfButton"><i data-feather="download"></i> Exporter en PDF</button>
         </div>
         <div class="loader" id="view-loader"></div>
         <div id="statusMessage"></div>
