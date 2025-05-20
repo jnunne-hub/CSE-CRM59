@@ -22,6 +22,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 
 </head>
@@ -76,7 +78,7 @@
         </div>
     </template>
 
-    <template id="template-dashboard">
+<template id="template-dashboard">
     <div class="container">
         <h1>Tableau de Bord des Heures de Travail</h1>
         
@@ -91,14 +93,12 @@
                 <label for="yearFilterDashboard">Année:</label>
                 <select id="yearFilterDashboard">
                     <option value="">Toutes</option>
-                    {/* Les années seront peuplées dynamiquement */}
                 </select>
             </div>
             <div class="filter-group">
                 <label for="monthFilterDashboard">Mois:</label>
                 <select id="monthFilterDashboard">
                     <option value="">Tous</option>
-                    {/* Les mois (01-12) */}
                 </select>
             </div>
             <div class="filter-group search-filter-group">
@@ -107,6 +107,10 @@
             </div>
             <div class="filter-group">
                 <button id="refreshButtonDashboard" class="btn"><i data-feather="refresh-cw"></i> Rafraîchir</button>
+            </div>
+            <!-- NOUVEAU BOUTON D'EXPORT PDF -->
+            <div class="filter-group">
+                <button id="exportPdfButtonDashboard" class="btn button-primary"><i data-feather="download"></i> Exporter en PDF</button>
             </div>
         </div>
 
@@ -137,35 +141,33 @@
         <div id="charts-exportable-content"> 
             <h1>Analyse Détaillée des Heures de Travail</h1>
 
-            <!-- NOUVELLE SECTION POUR LE TABLEAU RÉCAPITULATIF -->
-            <section class="summary-table-section">
-                <h2 class="summary-table-title">Synthèse Annuelle par Personne (Semaines Hautes / Basses)</h2>
-                <div id="chartsSummaryTableContainer" class="table-responsive-container">
-                    {/* Exemple de structure:
-                    <table id="summaryAnnualHoursTable">
-                        <thead>
-                            <tr>
-                                <th>Personne</th>
-                                <th>2025 (H/B)</th>
-                                <th>2024 (H/B)</th>
-                                ...
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Nom Personne</td>
-                                <td>5 / 10</td>
-                                <td>3 / 12</td>
-                                ...
-                            </tr>
-                        </tbody>
-                    </table>
-                    */}
+            <section class="charts-section" id="aggregated-monthly-charts-section">
+                <!-- Les titres et graphiques pour l'évolution mensuelle globale seront injectés ici -->
+                <div id="charts-aggregated-monthly-container"> 
                 </div>
             </section>
             
-            <div id="charts-annual-summary-container">
-            </div>
+            <!-- SECTION POUR LE TABLEAU RÉCAPITULATIF ANNUEL -->
+            <section class="charts-section" id="summary-annual-section"> 
+                <h2 class="summary-table-title section-title">Synthèse Annuelle par Personne (Semaines Hautes / Basses)</h2>
+                <div id="chartsSummaryTableContainer" class="table-responsive-container">
+           
+                </div>
+            </section>
+            
+            <!-- NOUVEAU CONTENEUR POUR LES STATS MENSUELLES -->
+            <section class="charts-section" id="monthly-high-weeks-section">
+             
+                <div id="chartsMonthlyHighWeeksContainer">
+                </div>
+            </section>
+            <!-- FIN NOUVEAU CONTENEUR -->
+
+            <!-- SECTION POUR LES GRAPHIQUES ANNUELS -->
+            <section class="charts-section" id="annual-charts-graphs-section"> 
+                <div id="charts-annual-summary-container">
+                </div>
+            </section>
         </div>
 
         <div class="controls chart-controls-fixed">
