@@ -248,7 +248,78 @@ table tr:hover td { background-color: rgba(var(--primary-color-rgb), 0.04); }
     padding: 12px 20px; border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
     position: sticky; bottom: 0; z-index: 900; margin-top: 20px;
 }
+.summary-table-section {
+    background-color: var(--white-color); /* Ou var(--bg-card) si vous voulez effet glassmorphism */
+    padding: 20px 25px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-medium);
+    margin-bottom: 35px;
+}
 
+.summary-table-title {
+    font-family: var(--font-family-headings);
+    font-size: 1.5em;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+    text-align: center;
+}
+
+.table-responsive-container {
+    overflow-x: auto; /* Permet le défilement horizontal pour les tableaux larges sur petits écrans */
+    margin-bottom: 15px;
+}
+
+#summaryAnnualHoursTable {
+    width: 100%;
+    border-collapse: separate; /* Pour les border-radius sur les cellules */
+    border-spacing: 0;
+    font-size: 0.85em; /* Texte un peu plus petit pour ce tableau récapitulatif */
+}
+
+#summaryAnnualHoursTable th,
+#summaryAnnualHoursTable td {
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    text-align: center; /* Centrer le contenu du tableau récapitulatif */
+    white-space: nowrap; /* Empêche le passage à la ligne des H/B */
+}
+
+#summaryAnnualHoursTable th {
+    background-color: var(--medium-gray);
+    font-weight: 600;
+    color: var(--text-primary);
+    position: sticky; /* En-têtes de colonnes fixes lors du défilement horizontal */
+    top: 0; /* Nécessaire pour sticky */
+    z-index: 10;
+}
+#summaryAnnualHoursTable thead th:first-child {
+    text-align: left; /* Personne alignée à gauche */
+     border-top-left-radius: var(--border-radius-sm);
+}
+ #summaryAnnualHoursTable thead th:last-child {
+    border-top-right-radius: var(--border-radius-sm);
+}
+
+
+#summaryAnnualHoursTable tbody td:first-child {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+#summaryAnnualHoursTable tbody tr:nth-child(even) td {
+    background-color: var(--light-gray);
+}
+#summaryAnnualHoursTable tbody tr:hover td {
+    background-color: rgba(var(--primary-color-rgb), 0.06);
+}
+
+/* Styles pour les valeurs H/B dans le tableau */
+.high-weeks { color: var(--danger-color); font-weight: 600; }
+.low-weeks { color: var(--secondary-color); font-weight: 500; }
+.no-data-cell { color: var(--dark-gray); font-style: italic; }
 /* --- Loader et Messages de Statut --- */
 /* Ce sélecteur cible le loader spécifique à la vue qui est dans les templates */
 #view-loader { 
